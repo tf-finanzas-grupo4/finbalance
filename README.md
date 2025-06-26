@@ -104,3 +104,15 @@ python manage.py shell
 ## Licencia
 
 (Información sobre la licencia del proyecto)
+
+## Run Tailwindcss
+```bash
+cd finbalance
+python manage.py tailwind start
+```
+
+## Run Project
+```bash
+cd finbalance
+python manage.py runserver
+```
