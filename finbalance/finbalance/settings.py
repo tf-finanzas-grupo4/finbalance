@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'tailwind',
     'theme',  
     'django_browser_reload',
-    'authentication.apps.AuthenticationConfig'
+    'authentication.apps.AuthenticationConfig',
+    'bonds.apps.BondsConfig',
 ]
 
 # Add this setting below INSTALLED_APPS
@@ -62,7 +63,10 @@ ROOT_URLCONF = 'finbalance.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [
+            BASE_DIR / 'templates',
+            BASE_DIR / 'theme' / 'templates',
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

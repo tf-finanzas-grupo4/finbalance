@@ -23,6 +23,7 @@ urlpatterns = [
     path("__reload__/", include("django_browser_reload.urls")),
     path('admin/', admin.site.urls),
     path('home/', views.home, name='home'),
+    path('bonds/', include('bonds.urls')),
     path('', include('authentication.urls')),
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
 ]

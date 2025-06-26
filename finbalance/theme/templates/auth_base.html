@@ -10,11 +10,8 @@
 	</head>
 
 	<body class="bg-gray-50 font-sans leading-normal tracking-normal">
-		<!-- Sidebar -->
-		{% include 'components/sidebar.html' %}
-		
-		<!-- Main content with left margin to account for fixed sidebar -->
-		<main class="ml-64">
+		<!-- Main content sin sidebar para authentication -->
+		<main>
 			{% block content %}{% endblock %}
 		</main>
 	</body>
