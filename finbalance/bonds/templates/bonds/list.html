@@ -11,46 +11,7 @@
 
 <body class="bg-gray-50 font-sans leading-normal tracking-normal">
     <!-- Sidebar -->
-<aside class="w-64 min-h-screen fixed text-white flex flex-col" style="background-color: #1E3C99;">
-  <!-- Header -->
-  <div class="p-8">
-    <h1 class="text-2xl font-bold text-white">FinBalance</h1>
-  </div>
-
-  <!-- Navigation Menu -->
-  <div class="px-6 flex-1">
-    <p class="px-3 text-sky-200 opacity-80 mb-2">Inicio</p>
-    <div class="shadow-lg p-2" style="background-color: rgba(255, 255, 255, 0.2); border-radius: 8px;">
-      <a href="/bonds/" class="flex items-center py-3 px-4 text-lg font-medium text-white rounded-lg">
-        <!-- Icon tipo menú (barra triple) -->
-        <svg class="mr-3" width="28" height="28" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
-          <line x1="4" y1="7" x2="20" y2="7" />
-          <line x1="4" y1="12" x2="20" y2="12" />
-          <line x1="4" y1="17" x2="20" y2="17" />
-        </svg>
-        Mis Bonos
-      </a>
-      <hr class="my-3 border-white/30" />
-      <a href="/bonds/create/" class="flex items-center py-3 px-4 text-lg font-medium text-white rounded-lg hover:bg-white/20 transition-colors">
-        <!-- Icono plus círculo -->
-        <svg class="mr-3" width="28" height="28" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="8" x2="12" y2="16" />
-          <line x1="8" y1="12" x2="16" y2="12" />
-        </svg>
-        Agregar bono
-      </a>
-    </div>
-  </div>
-
-  <!-- Footer -->
-  <div class="px-6 pb-8">
-    <div class="p-2 mb-4" style="background-color: #DAE9FF; border-radius: 5px;">
-      <p class="font-semibold" style="color: #1E3C99;">Italo Kunimoto</p>
-      <p class="text-sm" style="color: #1E3C99;">Inversionista</p>
-    </div>
-  </div>
-</aside>
+    {% include 'components/sidebar.html' %}
     
     <!-- Main content with left margin to account for fixed sidebar -->
     <main class="ml-64">
@@ -86,7 +47,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">4</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">9.10</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <a href="#" class="text-blue-600 hover:text-blue-900">Ver detalle</a>
+                                <a href="{% url 'bonds:detail' 1 %}" class="text-blue-600 hover:text-blue-900">Ver detalle</a>
                             </td>
                         </tr>
                         <tr class="hover:bg-gray-50">
@@ -98,7 +59,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">4</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">9.10</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <a href="#" class="text-blue-600 hover:text-blue-900">Ver detalle</a>
+                                <a href="{% url 'bonds:detail' 2 %}" class="text-blue-600 hover:text-blue-900">Ver detalle</a>
                             </td>
                         </tr>
                     </tbody>
