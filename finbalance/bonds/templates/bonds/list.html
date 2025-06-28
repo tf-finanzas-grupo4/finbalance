@@ -28,40 +28,26 @@
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: #1E3C99;">N°</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: #1E3C99;">Registro</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: #1E3C99;">Nombre Bono</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: #1E3C99;">Valor Nominal</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: #1E3C99;">Tasa(%)</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: #1E3C99;">Plazo(años)</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: #1E3C99;">TCEA(%)</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: #1E3C99;">Respuesta</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
+                        {% for bond in bonds %}
                         <!-- Datos de ejemplo -->
                         <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">001</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">30/01/2025</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Bono Empresa 1</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$3,000.00</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">30.00</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">4</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">9.10</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <a href="{% url 'bonds:detail' 1 %}" class="text-blue-600 hover:text-blue-900">Ver detalle</a>
-                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ forloop.counter }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ bond.fecha_registro|date:"d/m/Y" }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ bond.valor_nominal }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 ">{{ bond.tasa_interes }}% </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ bond.fecha_inicio|timesince:bond.fecha_fin }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <a href="{% url 'bonds:detail' bond.id %}" class="text-blue-600 hover:underline">Ver detalle</a>
                         </tr>
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">002</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">30/01/2025</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Bono Empresa 1</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$3,000.00</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">30.00</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">4</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">9.10</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <a href="{% url 'bonds:detail' 2 %}" class="text-blue-600 hover:text-blue-900">Ver detalle</a>
-                            </td>
-                        </tr>
+                        {% endfor %}
+                    
                     </tbody>
                 </table>
             </div>
