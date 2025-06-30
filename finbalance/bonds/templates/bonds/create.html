@@ -94,9 +94,12 @@
                         </div>
                         
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Período de gracia:</label>
-                            <input type="date" name="periodo_gracia"
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Período de Gracia</label>
+                            <select name="tipo_periodo_gracia" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="ninguno">Ninguno</option>
+                                <option value="total">Total (solo intereses)</option>
+                                <option value="parcial">Parcial (sin pagos)</option>
+                            </select>
                         </div>
                     </div>
 
@@ -110,19 +113,25 @@
 
                         <div class="flex-1">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Frecuencia de pagos</label>
-                            <input type="number" name="frecuencia_pagos" required
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                                   placeholder="Ingresa el valor">
+                            <select name="frecuencia_pagos" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">Seleccione frecuencia</option>
+                                <option value="12">Mensual (12 pagos/año)</option>
+                                <option value="6">Bimestral (6 pagos/año)</option>
+                                <option value="4">Trimestral (4 pagos/año)</option>
+                                <option value="3">Cuatrimestral (3 pagos/año)</option>
+                                <option value="2">Semestral (2 pagos/año)</option>
+                                <option value="1">Anual (1 pago/año)</option>
+                            </select>
                         </div>
                         
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Tasa o precio de mercado</label>
-                            <input type="number" name="precio_mercado" step="0.01" value="100.00"
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Duración Período de Gracia (meses)</label>
+                            <input type="number" name="duracion_gracia" min="0" max="36" value="0"
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                                   placeholder="Ingresa el valor">
+                                   placeholder="Número de meses">
                         </div>
                     </div>
-                    
+                             
                     <!-- Botón -->
                     <div class="pt-6 text-right">
                         <button type="submit" class="w-80 py-3 text-white rounded-lg font-medium hover:opacity-90 transition-opacity" style="background-color: #1E3C99;">
