@@ -8,16 +8,11 @@
         <h1 class="text-3xl font-bold text-gray-800">Bono #{{ bond.id|stringformat:"03d" }}</h1>
         <div class="flex space-x-4">
             <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                {{ bond.get_moneda_display }}
+                Método: {{ bond.metodo_amortizacion }}
             </span>
             <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                {{ bond.metodo_amortizacion }}
+                Días/Año: {{ bond.dias_por_anio }}
             </span>
-            {% if bond.tipo_periodo_gracia != 'ninguno' %}
-            <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
-                Gracia: {{ bond.get_tipo_periodo_gracia_display }} ({{ bond.duracion_gracia }} meses)
-            </span>
-            {% endif %}
         </div>
     </div>
 
@@ -28,33 +23,35 @@
             <div class="space-y-3">
                 <div class="flex justify-between">
                     <span class="text-gray-600">Valor Nominal:</span>
-                    <span class="font-medium">{{ bond.valor_nominal }} {{ bond.moneda }}</span>
+                    <span class="font-medium">{{ bond.valor_nominal }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Valor Comercial:</span>
+                    <span class="font-medium">{{ bond.valor_comercial }}</span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-gray-600">Tasa de Interés:</span>
-                    <span class="font-medium">{{ bond.tasa_interes }}% {{ bond.get_tipo_tasa_display }}</span>
+                    <span class="font-medium">{{ bond.tasa_interes }}% {{ bond.get_tipo_tasa_interes_display }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Tasa de Descuento:</span>
+                    <span class="font-medium">{{ bond.tasa_anual_descuento }}%</span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-gray-600">Plazo Total:</span>
-                    <span class="font-medium">{{ bond.fecha_inicio|date:"d/m/Y" }} - {{ bond.fecha_fin|date:"d/m/Y" }}</span>
+                    <span class="font-medium">{{ bond.num_anios }} años</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-gray-600">Frecuencia de Pagos:</span>
-                    <span class="font-medium">{{ bond.get_frecuencia_pagos_display }}</span>
+                    <span class="text-gray-600">Frecuencia de Cupón:</span>
+                    <span class="font-medium">{{ bond.get_frecuencia_cupon_display }}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-gray-600">Período de Gracia:</span>
-                    <span class="font-medium">
-                        {% if bond.tipo_periodo_gracia != 'ninguno' %}
-                            {{ bond.get_tipo_periodo_gracia_display }} ({{ bond.duracion_gracia }} meses)
-                        {% else %}
-                            No aplica
-                        {% endif %}
-                    </span>
+                    <span class="text-gray-600">Fecha de Emisión:</span>
+                    <span class="font-medium">{{ bond.fecha_emision|date:"d/m/Y" }}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-gray-600">Precio de Mercado:</span>
-                    <span class="font-medium">{{ bond.precio_mercado }}%</span>
+                    <span class="text-gray-600">Impuesto a la Renta:</span>
+                    <span class="font-medium">{{ bond.impuesto_renta }}%</span>
                 </div>
             </div>
         </div>
@@ -85,33 +82,47 @@
                 </div>
                 <div class="bg-gray-50 p-3 rounded">
                     <span class="block text-sm text-gray-500">Precio Teórico</span>
-                    <span class="block text-lg font-bold">{{ precio_teorico|floatformat:2 }} {{ bond.moneda }}</span>
+                    <span class="block text-lg font-bold">{{ precio_teorico|floatformat:2 }}</span>
                 </div>
-                {% if bond.tipo_periodo_gracia != 'ninguno' %}
-                <div class="bg-gray-50 p-3 rounded col-span-2">
-                    <span class="block text-sm text-gray-500">Cuota Normal (post-gracia)</span>
-                    <span class="block text-lg font-bold">{{ cuota_normal|floatformat:2 }} {{ bond.moneda }}</span>
+                <div class="bg-gray-50 p-3 rounded">
+                    <span class="block text-sm text-gray-500">VAN</span>
+                    <span class="block text-lg font-bold">{{ van|floatformat:2 }}</span>
                 </div>
-                {% endif %}
+                <div class="bg-gray-50 p-3 rounded">
+                    <span class="block text-sm text-gray-500">TIR</span>
+                    <span class="block text-lg font-bold">{{ tir|floatformat:2 }}%</span>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Resumen de Periodos -->
+    <!-- Costos Iniciales -->
     <div class="bg-white p-6 rounded-lg shadow">
-        <h2 class="text-xl font-semibold mb-4">Resumen de Periodos</h2>
-        <div class="grid grid-cols-3 gap-4">
-            <div class="bg-blue-50 p-3 rounded text-center">
-                <span class="block text-sm text-blue-600">Total Periodos</span>
-                <span class="block text-xl font-bold text-blue-800">{{ flujos|length }}</span>
+        <h2 class="text-xl font-semibold mb-4">Costos Iniciales</h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div class="bg-gray-50 p-3 rounded">
+                <span class="block text-sm text-gray-500">% Prima</span>
+                <span class="block text-lg font-bold">{{ bond.porcentaje_prima }}%</span>
             </div>
-            <div class="bg-yellow-50 p-3 rounded text-center">
-                <span class="block text-sm text-yellow-600">Periodos de Gracia</span>
-                <span class="block text-xl font-bold text-yellow-800">{{ periodos_gracia }}</span>
+            <div class="bg-gray-50 p-3 rounded">
+                <span class="block text-sm text-gray-500">% Estructuración</span>
+                <span class="block text-lg font-bold">{{ bond.porcentaje_estructuracion }}%</span>
             </div>
-            <div class="bg-green-50 p-3 rounded text-center">
-                <span class="block text-sm text-green-600">Periodos Normales</span>
-                <span class="block text-xl font-bold text-green-800">{{ periodos_normales }}</span>
+            <div class="bg-gray-50 p-3 rounded">
+                <span class="block text-sm text-gray-500">% Colocación</span>
+                <span class="block text-lg font-bold">{{ bond.porcentaje_colocacion }}%</span>
+            </div>
+            <div class="bg-gray-50 p-3 rounded">
+                <span class="block text-sm text-gray-500">% Flotación</span>
+                <span class="block text-lg font-bold">{{ bond.porcentaje_flotacion }}%</span>
+            </div>
+            <div class="bg-gray-50 p-3 rounded">
+                <span class="block text-sm text-gray-500">% CAVALI</span>
+                <span class="block text-lg font-bold">{{ bond.porcentaje_cavali }}%</span>
+            </div>
+            <div class="bg-gray-50 p-3 rounded">
+                <span class="block text-sm text-gray-500">Total Costos</span>
+                <span class="block text-lg font-bold">{{ bond.costos_iniciales|floatformat:2 }}</span>
             </div>
         </div>
     </div>
@@ -129,9 +140,9 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Periodo</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cuota</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interés</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interés Neto</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amortización</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">VP Flujo</th>
@@ -139,20 +150,14 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     {% for flujo in flujos %}
-                    <tr class="{% if flujo.tipo == 'Gracia' %}bg-yellow-50{% endif %}">
+                    <tr>
                         <td class="px-6 py-4 whitespace-nowrap">{{ flujo.periodo }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs rounded-full 
-                                {% if flujo.tipo == 'Gracia' %}bg-yellow-100 text-yellow-800
-                                {% else %}bg-green-100 text-green-800{% endif %}">
-                                {{ flujo.tipo }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ flujo.cuota }} {{ bond.moneda }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ flujo.interes }} {{ bond.moneda }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ flujo.amortizacion }} {{ bond.moneda }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ flujo.saldo }} {{ bond.moneda }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ flujo.vp_flujo }} {{ bond.moneda }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ flujo.cuota|floatformat:2 }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ flujo.interes|floatformat:2 }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ flujo.interes_neto|floatformat:2 }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ flujo.amortizacion|floatformat:2 }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ flujo.saldo|floatformat:2 }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ flujo.vp_flujo|floatformat:2 }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

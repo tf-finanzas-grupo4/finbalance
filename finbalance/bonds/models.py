@@ -3,7 +3,7 @@ from django.utils import timezone
 
 class Bond(models.Model):
     # Opciones para campos de selección
-    FRECUENCIA_PAGOS_CHOICES = [
+    FRECUENCIA_CUPON_CHOICES = [
         (12, 'Mensual (12 pagos/año)'),
         (6, 'Bimestral (6 pagos/año)'),
         (4, 'Trimestral (4 pagos/año)'),
@@ -12,73 +12,120 @@ class Bond(models.Model):
         (1, 'Anual (1 pago/año)'),
     ]
     
-    TIPO_GRACIA_CHOICES = [
-        ('ninguno', 'Ninguno'),
-        ('total', 'Total (solo intereses)'),
-        ('parcial', 'Parcial (sin pagos)'),
+    DIAS_ANIO_CHOICES = [
+        (360, '360 días'),
+        (365, '365 días'),
     ]
     
-    # Campos principales
+    TIPO_TASA_CHOICES = [
+        ('nominal', 'Nominal'),
+        ('efectiva', 'Efectiva'),
+    ]
+    
+    # Campos principales del formulario
     valor_nominal = models.DecimalField(
         max_digits=15, 
         decimal_places=2,
         verbose_name="Valor Nominal"
     )
-    moneda = models.CharField(
-        max_length=3,
-        choices=[('PEN', 'Soles'), ('USD', 'Dólares'), ('EUR', 'Euros')],
-        verbose_name="Moneda"
-    )
-    gastos = models.DecimalField(
-        max_digits=15, 
-        decimal_places=2, 
-        default=0,
-        verbose_name="Gastos"
-    )
-    tasa_interes = models.DecimalField(
-        max_digits=5,
+    
+    valor_comercial = models.DecimalField(
+        max_digits=15,
         decimal_places=2,
-        verbose_name="Tasa de Interés (%)"
+        verbose_name="Valor Comercial"
     )
-    tipo_tasa = models.CharField(
-        max_length=20,
-        choices=[('nominal', 'Nominal'), ('efectiva', 'Efectiva')],
-        verbose_name="Tipo de Tasa"
+    
+    num_anios = models.IntegerField(
+        verbose_name="Nº de Años"
     )
+    
+    frecuencia_cupon = models.IntegerField(
+        choices=FRECUENCIA_CUPON_CHOICES,
+        verbose_name="Frecuencia del cupón"
+    )
+    
+    dias_por_anio = models.IntegerField(
+        choices=DIAS_ANIO_CHOICES,
+        verbose_name="Días por Año"
+    )
+    
+    tipo_tasa_interes = models.CharField(
+        max_length=10,
+        choices=TIPO_TASA_CHOICES,
+        verbose_name="Tipo de Tasa de Interés"
+    )
+    
     capitalizacion = models.IntegerField(
-        null=True, 
+        null=True,
         blank=True,
         verbose_name="Capitalización"
     )
-    fecha_inicio = models.DateField(verbose_name="Fecha de Inicio")
-    fecha_fin = models.DateField(verbose_name="Fecha de Fin")
     
-    # Campos modificados/agregados
-    tipo_periodo_gracia = models.CharField(
-        max_length=10,
-        choices=TIPO_GRACIA_CHOICES,
-        default='ninguno',
-        verbose_name="Tipo de Período de Gracia"
+    tasa_interes = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        verbose_name="Tasa de interés (%)"
     )
-    duracion_gracia = models.IntegerField(
+    
+    tasa_anual_descuento = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        verbose_name="Tasa anual de descuento (%)"
+    )
+    
+    impuesto_renta = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        verbose_name="Impuesto a la Renta (%)"
+    )
+    
+    fecha_emision = models.DateField(
+        verbose_name="Fecha de Emisión"
+    )
+    
+    # Costos/Gastos iniciales
+    porcentaje_prima = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
         default=0,
-        verbose_name="Duración de Gracia (meses)"
+        verbose_name="% Prima"
     )
+    
+    porcentaje_estructuracion = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        verbose_name="% Estructuración"
+    )
+    
+    porcentaje_colocacion = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        verbose_name="% Colocación"
+    )
+    
+    porcentaje_flotacion = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        verbose_name="% Flotación"
+    )
+    
+    porcentaje_cavali = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        verbose_name="% CAVALI"
+    )
+    
+    # Campos del sistema
     metodo_amortizacion = models.CharField(
-        max_length=50, 
+        max_length=50,
         default='Francés',
         verbose_name="Método de Amortización"
     )
-    frecuencia_pagos = models.IntegerField(
-        choices=FRECUENCIA_PAGOS_CHOICES,
-        verbose_name="Frecuencia de Pagos"
-    )
-    precio_mercado = models.DecimalField(
-        max_digits=5,
-        decimal_places=2,
-        default=100.00,
-        verbose_name="Precio de Mercado (%)"
-    )
+    
     fecha_registro = models.DateTimeField(
         default=timezone.now,
         verbose_name="Fecha de Registro"
@@ -90,10 +137,14 @@ class Bond(models.Model):
         ordering = ['-fecha_registro']
 
     def __str__(self):
-        return f"Bono {self.id} - {self.valor_nominal} {self.moneda} ({self.fecha_inicio.year}-{self.fecha_fin.year})"
+        return f"Bono {self.id} - {self.valor_nominal} ({self.fecha_emision.year})"
 
-    # Método para calcular la fecha final del período de gracia
-    def fecha_fin_gracia(self):
-        if self.tipo_periodo_gracia == 'ninguno' or self.duracion_gracia == 0:
-            return None
-        return self.fecha_inicio + timezone.timedelta(days=30*self.duracion_gracia)
+    # Método para calcular costos iniciales totales
+    def costos_iniciales(self):
+        return (
+            self.porcentaje_prima +
+            self.porcentaje_estructuracion +
+            self.porcentaje_colocacion +
+            self.porcentaje_flotacion +
+            self.porcentaje_cavali
+        ) / 100 * self.valor_nominal
