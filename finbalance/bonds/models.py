@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from decimal import Decimal
 
 class Bond(models.Model):
     # Opciones para campos de selección
@@ -22,7 +23,13 @@ class Bond(models.Model):
         ('efectiva', 'Efectiva'),
     ]
     
-    # Campos principales del formulario
+    TIPO_RESPONSABLE_CHOICES = [
+        ('emisor', 'Emisor'),
+        ('bonista', 'Bonista'),
+        ('ambos', 'Ambos'),
+    ]
+    
+    # Campos principales
     valor_nominal = models.DecimalField(
         max_digits=15, 
         decimal_places=2,
@@ -56,11 +63,19 @@ class Bond(models.Model):
     )
     
     capitalizacion = models.IntegerField(
+        verbose_name="Frecuencia de Capitalización",
+        choices=FRECUENCIA_CUPON_CHOICES,
         null=True,
-        blank=True,
-        verbose_name="Capitalización"
+        blank=True
     )
     
+    dias_capitalizacion = models.IntegerField(
+        verbose_name="Días de Capitalización",
+        help_text="Número de días para el período de capitalización",
+        null=True,
+        blank=True
+    )
+
     tasa_interes = models.DecimalField(
         max_digits=5,
         decimal_places=2,
@@ -90,12 +105,24 @@ class Bond(models.Model):
         default=0,
         verbose_name="% Prima"
     )
+    tipo_prima = models.CharField(
+        max_length=10,
+        choices=TIPO_RESPONSABLE_CHOICES,
+        default='emisor',
+        verbose_name="Tipo Prima"
+    )
     
     porcentaje_estructuracion = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         default=0,
         verbose_name="% Estructuración"
+    )
+    tipo_estructuracion = models.CharField(
+        max_length=10,
+        choices=TIPO_RESPONSABLE_CHOICES,
+        default='emisor',
+        verbose_name="Tipo Estructuración"
     )
     
     porcentaje_colocacion = models.DecimalField(
@@ -104,6 +131,12 @@ class Bond(models.Model):
         default=0,
         verbose_name="% Colocación"
     )
+    tipo_colocacion = models.CharField(
+        max_length=10,
+        choices=TIPO_RESPONSABLE_CHOICES,
+        default='emisor',
+        verbose_name="Tipo Colocación"
+    )
     
     porcentaje_flotacion = models.DecimalField(
         max_digits=5,
@@ -111,12 +144,24 @@ class Bond(models.Model):
         default=0,
         verbose_name="% Flotación"
     )
+    tipo_flotacion = models.CharField(
+        max_length=10,
+        choices=TIPO_RESPONSABLE_CHOICES,
+        default='emisor',
+        verbose_name="Tipo Flotación"
+    )
     
     porcentaje_cavali = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         default=0,
         verbose_name="% CAVALI"
+    )
+    tipo_cavali = models.CharField(
+        max_length=10,
+        choices=TIPO_RESPONSABLE_CHOICES,
+        default='emisor',
+        verbose_name="Tipo CAVALI"
     )
     
     # Campos del sistema
@@ -139,12 +184,44 @@ class Bond(models.Model):
     def __str__(self):
         return f"Bono {self.id} - {self.valor_nominal} ({self.fecha_emision.year})"
 
-    # Método para calcular costos iniciales totales
-    def costos_iniciales(self):
-        return (
-            self.porcentaje_prima +
-            self.porcentaje_estructuracion +
-            self.porcentaje_colocacion +
-            self.porcentaje_flotacion +
-            self.porcentaje_cavali
-        ) / 100 * self.valor_nominal
+    # Método para calcular costos iniciales totales por tipo
+    def costos_iniciales(self, tipo):
+        total = Decimal('0')
+        campos = [
+            ('porcentaje_prima', 'tipo_prima'),
+            ('porcentaje_estructuracion', 'tipo_estructuracion'),
+            ('porcentaje_colocacion', 'tipo_colocacion'),
+            ('porcentaje_flotacion', 'tipo_flotacion'),
+            ('porcentaje_cavali', 'tipo_cavali'),
+        ]
+        
+        for campo_porcentaje, campo_tipo in campos:
+            porcentaje = getattr(self, campo_porcentaje)
+            tipo_responsable = getattr(self, campo_tipo)
+            
+            if tipo_responsable == tipo or tipo_responsable == 'ambos':
+                total += porcentaje
+        
+        return (total / Decimal('100')) * self.valor_nominal
+
+    @property
+    def costos_emisor(self):
+        return self.costos_iniciales('emisor')
+
+    @property
+    def costos_bonista(self):
+        return self.costos_iniciales('bonista')
+    
+    @property
+    def dias_capitalizacion(self):
+        dias = {
+            360: 1,    # Diaria
+            24: 15,     # Quincenal
+            12: 30,     # Mensual
+            6: 60,      # Bimestral
+            4: 90,      # Trimestral
+            3: 120,     # Cuatrimestral
+            2: 180,     # Semestral
+            1: 360      # Anual
+        }
+        return dias.get(self.capitalizacion, 30)  # 30 días por defecto

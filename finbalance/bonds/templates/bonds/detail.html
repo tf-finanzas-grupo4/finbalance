@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% load static tailwind_tags %}
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 {% block content %}
 <div class="space-y-6 p-8">
     <!-- Encabezado -->
@@ -16,8 +18,9 @@
         </div>
     </div>
 
-    <!-- Datos del Bono -->
+    <!-- Datos principales en 2 columnas -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Columna izquierda - Datos básicos -->
         <div class="bg-white p-6 rounded-lg shadow">
             <h2 class="text-xl font-semibold mb-4">Características del Bono</h2>
             <div class="space-y-3">
@@ -34,95 +37,118 @@
                     <span class="font-medium">{{ bond.tasa_interes }}% {{ bond.get_tipo_tasa_interes_display }}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-gray-600">Tasa de Descuento:</span>
-                    <span class="font-medium">{{ bond.tasa_anual_descuento }}%</span>
-                </div>
-                <div class="flex justify-between">
                     <span class="text-gray-600">Plazo Total:</span>
                     <span class="font-medium">{{ bond.num_anios }} años</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-gray-600">Frecuencia de Cupón:</span>
+                    <span class="text-gray-600">Frecuencia del cupón:</span>
                     <span class="font-medium">{{ bond.get_frecuencia_cupon_display }}</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-600">Fecha de Emisión:</span>
-                    <span class="font-medium">{{ bond.fecha_emision|date:"d/m/Y" }}</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-600">Impuesto a la Renta:</span>
-                    <span class="font-medium">{{ bond.impuesto_renta }}%</span>
                 </div>
             </div>
         </div>
 
-        <!-- Indicadores Financieros -->
+        <!-- Columna derecha - Estructura del bono -->
         <div class="bg-white p-6 rounded-lg shadow">
-            <h2 class="text-xl font-semibold mb-4">Indicadores Financieros</h2>
+            <h2 class="text-xl font-semibold mb-4">Estructura del Bono</h2>
             <div class="grid grid-cols-2 gap-4">
                 <div class="bg-gray-50 p-3 rounded">
-                    <span class="block text-sm text-gray-500">TCEA</span>
-                    <span class="block text-lg font-bold">{{ tcea }}%</span>
+                    <span class="block text-sm text-gray-500">Días capitalización</span>
+                    <span class="block text-lg font-bold">{{ bond.dias_capitalizacion }}</span>
                 </div>
                 <div class="bg-gray-50 p-3 rounded">
-                    <span class="block text-sm text-gray-500">TREA</span>
-                    <span class="block text-lg font-bold">{{ trea }}%</span>
+                    <span class="block text-sm text-gray-500">Nº Períodos por Año</span>
+                    <span class="block text-lg font-bold">{{ periodos_por_anio }}</span>
                 </div>
                 <div class="bg-gray-50 p-3 rounded">
-                    <span class="block text-sm text-gray-500">Duración</span>
-                    <span class="block text-lg font-bold">{{ duracion|floatformat:4 }} años</span>
+                    <span class="block text-sm text-gray-500">Nº Total de Períodos</span>
+                    <span class="block text-lg font-bold">{{ flujos|length }}</span>
                 </div>
                 <div class="bg-gray-50 p-3 rounded">
-                    <span class="block text-sm text-gray-500">Duración Modificada</span>
-                    <span class="block text-lg font-bold">{{ duracion_modificada|floatformat:4 }}</span>
+                    <span class="block text-sm text-gray-500">Tasa efectiva anual</span>
+                    <span class="block text-lg font-bold">{{ tea|floatformat:4 }}%</span>
                 </div>
                 <div class="bg-gray-50 p-3 rounded">
-                    <span class="block text-sm text-gray-500">Convexidad</span>
-                    <span class="block text-lg font-bold">{{ convexidad|floatformat:6 }}</span>
+                    <span class="block text-sm text-gray-500">Tasa efectiva {{ periodo_nombre }}</span>
+                    <span class="block text-lg font-bold">{{ tep|floatformat:3 }}%</span>
                 </div>
                 <div class="bg-gray-50 p-3 rounded">
-                    <span class="block text-sm text-gray-500">Precio Teórico</span>
-                    <span class="block text-lg font-bold">{{ precio_teorico|floatformat:2 }}</span>
-                </div>
-                <div class="bg-gray-50 p-3 rounded">
-                    <span class="block text-sm text-gray-500">VAN</span>
-                    <span class="block text-lg font-bold">{{ van|floatformat:2 }}</span>
-                </div>
-                <div class="bg-gray-50 p-3 rounded">
-                    <span class="block text-sm text-gray-500">TIR</span>
-                    <span class="block text-lg font-bold">{{ tir|floatformat:2 }}%</span>
+                    <span class="block text-sm text-gray-500">COK {{ periodo_nombre }}</span>
+                    <span class="block text-lg font-bold">{{ cok_periodo|floatformat:3 }}%</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Costos Iniciales -->
-    <div class="bg-white p-6 rounded-lg shadow">
-        <h2 class="text-xl font-semibold mb-4">Costos Iniciales</h2>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+    <!-- Sección de Costes -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-xl font-semibold mb-4">Costes Iniciales</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-gray-50 p-3 rounded">
+                    <span class="block text-sm text-gray-500">Emisor</span>
+                    <span class="block text-lg font-bold">{{ costes_emisor|floatformat:2 }}</span>
+                </div>
+                <div class="bg-gray-50 p-3 rounded">
+                    <span class="block text-sm text-gray-500">Bonista</span>
+                    <span class="block text-lg font-bold">{{ costes_bonista|floatformat:2 }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Precio y Utilidad -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-xl font-semibold mb-4">Precio Actual y Utilidad</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-gray-50 p-3 rounded">
+                    <span class="block text-sm text-gray-500">Precio Actual</span>
+                    <span class="block text-lg font-bold">{{ precio_actual|floatformat:2 }}</span>
+                </div>
+                <div class="bg-gray-50 p-3 rounded">
+                    <span class="block text-sm text-gray-500">Utilidad / Pérdida</span>
+                    <span class="block text-lg font-bold">{{ utilidad|floatformat:2 }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ratios de decisión -->
+    <div class="bg-white p-6 rounded-lg shadow mt-6">
+        <h2 class="text-xl font-semibold mb-4">Ratios de decisión</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="bg-gray-50 p-3 rounded">
-                <span class="block text-sm text-gray-500">% Prima</span>
-                <span class="block text-lg font-bold">{{ bond.porcentaje_prima }}%</span>
+                <span class="block text-sm text-gray-500">Duración</span>
+                <span class="block text-lg font-bold">{{ duracion|floatformat:2 }}</span>
             </div>
             <div class="bg-gray-50 p-3 rounded">
-                <span class="block text-sm text-gray-500">% Estructuración</span>
-                <span class="block text-lg font-bold">{{ bond.porcentaje_estructuracion }}%</span>
+                <span class="block text-sm text-gray-500">Convexidad</span>
+                <span class="block text-lg font-bold">{{ convexidad|floatformat:2 }}</span>
             </div>
             <div class="bg-gray-50 p-3 rounded">
-                <span class="block text-sm text-gray-500">% Colocación</span>
-                <span class="block text-lg font-bold">{{ bond.porcentaje_colocacion }}%</span>
+                <span class="block text-sm text-gray-500">Total</span>
+                <span class="block text-lg font-bold">{{ total_ratios|floatformat:2 }}</span>
             </div>
             <div class="bg-gray-50 p-3 rounded">
-                <span class="block text-sm text-gray-500">% Flotación</span>
-                <span class="block text-lg font-bold">{{ bond.porcentaje_flotacion }}%</span>
+                <span class="block text-sm text-gray-500">Duración modificada</span>
+                <span class="block text-lg font-bold">{{ duracion_modificada|floatformat:2 }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indicadores de Rentabilidad -->
+    <div class="bg-white p-6 rounded-lg shadow mt-6">
+        <h2 class="text-xl font-semibold mb-4">Indicadores de Rentabilidad</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-gray-50 p-3 rounded">
+                <span class="block text-sm text-gray-500">TCEA Emisor</span>
+                <span class="block text-lg font-bold">{{ tcea_emisor|floatformat:5 }}%</span>
             </div>
             <div class="bg-gray-50 p-3 rounded">
-                <span class="block text-sm text-gray-500">% CAVALI</span>
-                <span class="block text-lg font-bold">{{ bond.porcentaje_cavali }}%</span>
+                <span class="block text-sm text-gray-500">TCEA Emisor c/ Escudo</span>
+                <span class="block text-lg font-bold">{{ tcea_emisor_escudo|floatformat:5 }}%</span>
             </div>
             <div class="bg-gray-50 p-3 rounded">
-                <span class="block text-sm text-gray-500">Total Costos</span>
-                <span class="block text-lg font-bold">{{ bond.costos_iniciales|floatformat:2 }}</span>
+                <span class="block text-sm text-gray-500">TREA Bonista</span>
+                <span class="block text-lg font-bold">{{ trea_bonista|floatformat:5 }}%</span>
             </div>
         </div>
     </div>
@@ -139,13 +165,16 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Periodo</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cuota</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interés</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interés Neto</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amortización</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">VP Flujo</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Periodo</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cuota
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Interés</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Amortización</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo
+                        </th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -154,15 +183,17 @@
                         <td class="px-6 py-4 whitespace-nowrap">{{ flujo.periodo }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">{{ flujo.cuota|floatformat:2 }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">{{ flujo.interes|floatformat:2 }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ flujo.interes_neto|floatformat:2 }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">{{ flujo.amortizacion|floatformat:2 }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">{{ flujo.saldo|floatformat:2 }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ flujo.vp_flujo|floatformat:2 }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
+    
 </div>
 {% endblock %}
+
+
+
