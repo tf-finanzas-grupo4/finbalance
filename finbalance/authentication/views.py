@@ -14,7 +14,7 @@ def login_view(request):
             if user is not None:
                 login(request, user)
                 messages.success(request, f"Bienvenido {username}!")
-                return redirect('home')
+                return redirect('bonds:list')
             else:
                 messages.error(request, "Usuario o contraseña inválidos.")
         else:
@@ -32,7 +32,7 @@ def signup_view(request):
             username = form.cleaned_data.get('username')
             messages.success(request, f"Cuenta creada para {username}!")
             login(request, user)
-            return redirect('home')
+            return redirect('bonds:list')
         else:
             messages.error(request, "Error en el registro. Por favor verifica la información.")
     else:

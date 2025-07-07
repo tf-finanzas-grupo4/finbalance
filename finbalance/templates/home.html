@@ -1,24 +1,84 @@
-{% extends 'base.html' %}
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
 
-{% block title %}Home - FinBalance{% endblock %}
+<head>
+    <title>Home - FinBalance</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    {% tailwind_css %}
+    <!-- Tailwind CSS CDN como respaldo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
 
-{% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">Welcome to FinBalance</h1>
-    <p class="mb-4">Your financial portfolio management solution</p>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-semibold mb-3">Portfolio Overview</h2>
-            <p>Track and manage your investment portfolio in one place.</p>
+<body class="bg-gray-50 font-sans leading-normal tracking-normal">
+    <!-- Sidebar -->
+    {% include 'components/sidebar.html' %}
+
+    <!-- Main content with left margin to account for fixed sidebar -->
+    <main class="ml-64">
+        <div class="bg-white py-20">
+            <div class="mx-auto max-w-7xl px-6 lg:px-8">
+                <div class="mx-auto max-w-2xl lg:mx-0">
+                    <h2 class="text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">Equipo de
+                        FinBalance</h2>
+                    <p class="mt-6 text-lg/8 text-gray-600">Grupo de desarrollo para los cálculos de esta aplicación</p>
+                </div>
+                <ul role="list"
+                    class="mx-auto mt-20 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3">
+                    <li>
+                        <img class="w-full rounded-2xl object-cover" src="{% static 'img/img-mathias-kunimoto.png' %}"
+                            alt="" />
+                        <h3 class="mt-6 text-lg/8 font-semibold tracking-tight text-gray-900">Mathias Kunimoto</h3>
+                        <p class="text-base/7 text-gray-600">Ingeniería de Software</p>
+                    </li>
+
+                    <!-- Segunda persona -->
+                    <li>
+                        <img class="aspect-[2/2] w-full rounded-2xl object-cover"
+                            src="{% static 'img/img-italo-luna.png' %}" alt="" />
+                        <h3 class="mt-6 text-lg/8 font-semibold tracking-tight text-gray-900">Italo Luna</h3>
+                        <p class="text-base/7 text-gray-600">Ingeniería de Software</p>
+                    </li>
+
+                    <!-- Tercera persona -->
+                    <li>
+                        <img class="aspect-[2/2] w-full rounded-2xl object-cover"
+                            src="{% static 'img/img-milagros-tongo.png' %}" alt="" />
+                        <h3 class="mt-6 text-lg/8 font-semibold tracking-tight text-gray-900">Milagros Tongo</h3>
+                        <p class="text-base/7 text-gray-600">Ingeniería de Software</p>
+                    </li>
+
+                    <!-- Cuarta persona -->
+                    <li>
+                        <img class="aspect-[2/2] w-full rounded-2xl object-cover"
+                            src="{% static 'img/img-nicolas-esteban.png' %}" alt="" />
+                        <h3 class="mt-6 text-lg/8 font-semibold tracking-tight text-gray-900">Nicolas Esteban</h3>
+                        <p class="text-base/7 text-gray-600">Ingeniería de Software</p>
+                    </li>
+
+                    <!-- Quinta persona -->
+                    <li>
+                        <img class="aspect-[2/2] w-full rounded-2xl object-cover"
+                            src="{% static 'img/img-vanessa.png' %}" alt="" />
+                        <h3 class="mt-6 text-lg/8 font-semibold tracking-tight text-gray-900">Vanessa Mogollon</h3>
+                        <p class="text-base/7 text-gray-600">Ingeniería de Sistemas</p>
+                    </li>
+
+                    <!-- Sexta persona -->
+                    <li>
+                        <img class="aspect-[2/2] w-full rounded-2xl object-cover"
+                            src="{% static 'img/img-piero-tarazona.png' %}" alt="" />
+                        <h3 class="mt-6 text-lg/8 font-semibold tracking-tight text-gray-900">Piero Tarazona</h3>
+                        <p class="text-base/7 text-gray-600">Ingeniería de Software</p>
+                    </li>
+                </ul>
+            </div>
         </div>
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-semibold mb-3">Bond Analytics</h2>
-            <p>Analyze and optimize your bond investments.</p>
+
         </div>
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-semibold mb-3">Financial Insights</h2>
-            <p>Get data-driven insights to improve your investment strategy.</p>
-        </div>
-    </div>
-</div>
-{% endblock %}
+    </main>
+</body>
+
+</html>

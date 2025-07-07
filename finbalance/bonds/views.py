@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from .models import Bond
 from django.utils import timezone
 from decimal import Decimal, getcontext
@@ -46,10 +47,12 @@ def calcular_vna(tasa_descuento, flujos):
     return vna
 
 # bonds/views.py
+@login_required
 def bond_list(request):
     bonds = Bond.objects.all().order_by('-fecha_registro')
     return render(request, 'bonds/list.html', {'bonds': bonds})
 
+@login_required
 def bond_create(request):
     if request.method == 'POST':
         try:
@@ -97,6 +100,7 @@ def bond_create(request):
     return render(request, 'bonds/create.html')
 
 
+@login_required
 def bond_detail(request, bond_id):
     getcontext().prec = 12
     bond = get_object_or_404(Bond, id=bond_id)
