@@ -136,4 +136,9 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Login configuration
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'bonds:list'
+LOGOUT_REDIRECT_URL = 'login'
+
 NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"

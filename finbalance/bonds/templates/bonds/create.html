@@ -13,28 +13,81 @@
             function handleTasaInteres() {
                 const tipoTasa = document.querySelector('select[name="tipo_tasa_interes"]');
                 const capitalizacionDiv = document.querySelector('div[name="capitalizacion_container"]');
+                const capitalizacionSelect = capitalizacionDiv.querySelector('select');
+                const capitalizacionLabel = capitalizacionDiv.querySelector('label');
                 
-                if (tipoTasa.value === 'nominal') {
-                    capitalizacionDiv.classList.remove('opacity-50');
-                    capitalizacionDiv.querySelector('select').disabled = false;
+                if (tipoTasa.value === 'efectiva') {
+                    // Deshabilitar y oscurecer para tasa efectiva
+                    capitalizacionDiv.classList.add('opacity-60');
+                    capitalizacionSelect.disabled = true;
+                    capitalizacionSelect.required = false;
+                    capitalizacionSelect.value = '';
+                    capitalizacionSelect.classList.add('bg-gray-200', 'text-gray-500', 'cursor-not-allowed');
+                    capitalizacionLabel.classList.add('text-gray-500');
+                    
+                    // Agregar opción explicativa
+                    capitalizacionSelect.innerHTML = '<option value="">No aplica para tasa efectiva</option>';
+                    
+                } else if (tipoTasa.value === 'nominal') {
+                    // Habilitar para tasa nominal
+                    capitalizacionDiv.classList.remove('opacity-60');
+                    capitalizacionSelect.disabled = false;
+                    capitalizacionSelect.required = true;
+                    capitalizacionSelect.classList.remove('bg-gray-200', 'text-gray-500', 'cursor-not-allowed');
+                    capitalizacionLabel.classList.remove('text-gray-500');
+                    
+                    // Restaurar opciones originales
+                    capitalizacionSelect.innerHTML = `
+                        <option value="">Seleccione frecuencia</option>
+                        <option value="365">Diaria (365 veces/año)</option>
+                        <option value="24">Quincenal (24 veces/año)</option>
+                        <option value="12">Mensual (12 veces/año)</option>
+                        <option value="6">Bimestral (6 veces/año)</option>
+                        <option value="4">Trimestral (4 veces/año)</option>
+                        <option value="3">Cuatrimestral (3 veces/año)</option>
+                        <option value="2">Semestral (2 veces/año)</option>
+                        <option value="1">Anual (1 vez/año)</option>
+                    `;
+                    
                 } else {
-                    capitalizacionDiv.classList.add('opacity-50');
-                    capitalizacionDiv.querySelector('select').disabled = true;
-                    capitalizacionDiv.querySelector('select').value = '';
+                    // Estado inicial cuando no se ha seleccionado nada
+                    capitalizacionDiv.classList.add('opacity-60');
+                    capitalizacionSelect.disabled = true;
+                    capitalizacionSelect.required = false;
+                    capitalizacionSelect.value = '';
+                    capitalizacionSelect.classList.add('bg-gray-200', 'text-gray-500', 'cursor-not-allowed');
+                    capitalizacionLabel.classList.add('text-gray-500');
+                    capitalizacionSelect.innerHTML = '<option value="">Primero seleccione tipo de tasa</option>';
                 }
             }
             
             // Función para manejar la lógica del plazo de gracia
             function handlePlazoGracia() {
                 const tieneGracia = document.querySelector('select[name="tiene_plazo_gracia"]');
-                const graciaFields = document.querySelector('div[name="plazo_gracia_fields"]');
+                const graciaFields = document.querySelectorAll('div[name="plazo_gracia_fields"]');
                 
                 if (tieneGracia.value === 'si') {
-                    graciaFields.classList.remove('hidden');
+                    graciaFields.forEach(field => {
+                        field.classList.remove('hidden');
+                        const input = field.querySelector('input');
+                        const select = field.querySelector('select');
+                        if (input) input.required = true;
+                        if (select) select.required = true;
+                    });
                 } else {
-                    graciaFields.classList.add('hidden');
-                    graciaFields.querySelector('input[name="periodos_gracia"]').value = '';
-                    graciaFields.querySelector('select[name="tipo_gracia"]').value = '';
+                    graciaFields.forEach(field => {
+                        field.classList.add('hidden');
+                        const input = field.querySelector('input');
+                        const select = field.querySelector('select');
+                        if (input) {
+                            input.value = '';
+                            input.required = false;
+                        }
+                        if (select) {
+                            select.value = '';
+                            select.required = false;
+                        }
+                    });
                 }
             }
             
