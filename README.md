@@ -34,7 +34,10 @@ finbalance_env\Scripts\activate
 ### 3. Instalar Dependencias
 ```bash
 pip install django
-# Añadir otras dependencias si son necesarias
+pip install matplotlib
+pip install django-tailwind
+pip install django-browser-reload
+# Otras dependencias del proyecto
 ```
 
 ## Uso
@@ -194,12 +197,13 @@ sqlite3 db.sqlite3 "PRAGMA table_info(bonds_bond);"
 - Instalar extensión "SQLite Viewer" o "Database Client"
 - Hacer clic derecho en `db.sqlite3` → "Open Database"
 
-#### Opción 2: DB Browser for SQLite (Herramienta Externa)
+#### Opción 2: DB Browser for SQLite (Herramienta Externa) - **RECOMENDADO**
 ```bash
-# Instalar con Homebrew (macOS)
+# Instalar con Homebrew (macOS) - solo una vez
 brew install --cask db-browser-for-sqlite
 
-# Abrir base de datos
+# Abrir base de datos (usar este comando cada vez)
+cd finbalance
 open -a "DB Browser for SQLite" db.sqlite3
 ```
 
@@ -212,5 +216,4 @@ sqlite3 db.sqlite3
 .tables          # Ver todas las tablas
 .schema          # Ver esquema completo
 SELECT * FROM bonds_bond LIMIT 10;  # Ver datos de bonos
-.quit            # Salir
-```
+.quit            # Sali
