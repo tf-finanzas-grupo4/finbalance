@@ -7,6 +7,144 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     {% tailwind_css %}
+    
+    <!-- Estilos para tooltips -->
+    <style>
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 280px;
+            background-color: #1f2937;
+            color: white;
+            text-align: left;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -140px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 14px;
+            line-height: 1.4;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #1f2937 transparent transparent transparent;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 8px;
+            cursor: help;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .help-icon:hover {
+            background: linear-gradient(135deg, #059669, #047857);
+            transform: scale(1.1);
+            box-shadow: 0 3px 6px rgba(16, 185, 129, 0.4);
+        }
+        
+        .help-icon::before {
+            content: "�";
+            font-size: 11px;
+        }
+        
+        .info-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background-color: #10b981;
+            color: white;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 4px;
+            cursor: help;
+            transition: all 0.2s ease;
+        }
+        
+        .info-icon:hover {
+            background-color: #059669;
+            transform: scale(1.1);
+        }
+        
+        .example-tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+        
+        .example-tooltip .example-tooltiptext {
+            visibility: hidden;
+            width: 280px;
+            background-color: #065f46;
+            color: white;
+            text-align: left;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -140px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 14px;
+            line-height: 1.4;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .example-tooltip .example-tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #065f46 transparent transparent transparent;
+        }
+        
+        .example-tooltip:hover .example-tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Función para manejar la lógica de la tasa de interés
@@ -120,21 +258,63 @@
                     <!-- Primera fila -->
                     <div class="flex gap-6">
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Valor Nominal</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Valor Nominal
+                                <span class="tooltip">
+                                    <span class="help-icon">?</span>
+                                    <span class="tooltiptext">
+                                        <strong>Valor Nominal:</strong> Valor facial del bono que se paga al vencimiento.
+                                    </span>
+                                </span>
+                                <span class="example-tooltip">
+                                    <span class="info-icon">i</span>
+                                    <span class="example-tooltiptext">
+                                        <strong>Ejemplo:</strong> 1000, 5000, 10000
+                                    </span>
+                                </span>
+                            </label>
                             <input type="number" name="valor_nominal" step="0.01" required
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                                    placeholder="Ingrese el valor nominal">
                         </div>
                         
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Valor Comercial</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Valor Comercial
+                                <span class="tooltip">
+                                    <span class="help-icon">?</span>
+                                    <span class="tooltiptext">
+                                        <strong>Valor Comercial:</strong> Es el precio actual del bono, que puede ser mayor, menor o igual al valor nominal según el mercado.
+                                    </span>
+                                </span>
+                                <span class="example-tooltip">
+                                    <span class="info-icon">i</span>
+                                    <span class="example-tooltiptext">
+                                        <strong>Ejemplo:</strong> Si se cotiza a 950 soles, ingrese: <em>950</em>
+                                    </span>
+                                </span>
+                            </label>
                             <input type="number" name="valor_comercial" step="0.01" required
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                                    placeholder="Ingrese el valor comercial">
                         </div>
                         
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Nº de Años</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Nº de Años
+                                <span class="tooltip">
+                                    <span class="help-icon">?</span>
+                                    <span class="tooltiptext">
+                                        <strong>Número de Años:</strong> Es el tiempo que falta para que el emisor devuelva el valor nominal del bono.
+                                    </span>
+                                </span>
+                                <span class="example-tooltip">
+                                    <span class="info-icon">i</span>
+                                    <span class="example-tooltiptext">
+                                        <strong>Ejemplo:</strong> Para 5 años, ingrese: <em>5</em>
+                                    </span>
+                                </span>
+                            </label>
                             <input type="number" name="num_anios" required
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                                    placeholder="Ingrese número de años">
@@ -144,7 +324,21 @@
                     <!-- Segunda fila -->
                     <div class="flex gap-6">
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Frecuencia del cupón</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Frecuencia del cupón
+                                <span class="tooltip">
+                                    <span class="help-icon">?</span>
+                                    <span class="tooltiptext">
+                                        <strong>Frecuencia del Cupón:</strong> Indica con qué frecuencia se pagan los intereses durante el año. Determina cuántas veces al año recibirá los pagos de intereses.
+                                    </span>
+                                </span>
+                                <span class="example-tooltip">
+                                    <span class="info-icon">i</span>
+                                    <span class="example-tooltiptext">
+                                        <strong>Ejemplo:</strong> Para pagos cada 6 meses, seleccione: <em>Semestral</em>
+                                    </span>
+                                </span>
+                            </label>
                             <select name="frecuencia_cupon" required
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 <option value="">Seleccione frecuencia</option>
@@ -158,7 +352,21 @@
                         </div>
                         
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Días por Año</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Días por Año
+                                <span class="tooltip">
+                                    <span class="help-icon">?</span>
+                                    <span class="tooltiptext">
+                                        <strong>Días por Año:</strong> Base de cálculo para los intereses. 360 días es común en finanzas comerciales, 365 días es el año natural.
+                                    </span>
+                                </span>
+                                <span class="example-tooltip">
+                                    <span class="info-icon">i</span>
+                                    <span class="example-tooltiptext">
+                                        <strong>Ejemplo:</strong> Para bonos bancarios, seleccione: <em>360 días</em>
+                                    </span>
+                                </span>
+                            </label>
                             <select name="dias_por_anio" required
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 <option value="360">360 días</option>
@@ -167,7 +375,23 @@
                         </div>
                         
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Tasa de Interés</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Tipo de Tasa de Interés
+                                <span class="tooltip">
+                                    <span class="help-icon">?</span>
+                                    <span class="tooltiptext">
+                                        <strong>Tipo de Tasa:</strong><br>
+                                        • <strong>Nominal:</strong> Tasa que no considera el efecto de la capitalización<br>
+                                        • <strong>Efectiva:</strong> Tasa que ya incluye el efecto de la capitalización
+                                    </span>
+                                </span>
+                                <span class="example-tooltip">
+                                    <span class="info-icon">i</span>
+                                    <span class="example-tooltiptext">
+                                        <strong>Ejemplo:</strong> Para "6% TEA", seleccione: <em>Efectiva</em>
+                                    </span>
+                                </span>
+                            </label>
                             <select name="tipo_tasa_interes" required
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 <option value="">Seleccione tipo</option>
@@ -180,7 +404,21 @@
                     <!-- Tercera fila -->
                     <div class="flex gap-6">
                         <div class="flex-1" name="capitalizacion_container">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Frecuencia de Capitalización</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Frecuencia de Capitalización
+                                <span class="tooltip">
+                                    <span class="help-icon">?</span>
+                                    <span class="tooltiptext">
+                                        <strong>Frecuencia de Capitalización:</strong> Indica con qué frecuencia se capitalizan los intereses durante el año. Solo aplica para tasas nominales.
+                                    </span>
+                                </span>
+                                <span class="example-tooltip">
+                                    <span class="info-icon">i</span>
+                                    <span class="example-tooltiptext">
+                                        <strong>Ejemplo:</strong> Para "6% TNA capitalizable mensualmente", seleccione: <em>Mensual</em>
+                                    </span>
+                                </span>
+                            </label>
                             <select name="capitalizacion" required
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 <option value="">Seleccione frecuencia</option>
@@ -196,14 +434,42 @@
                         </div>
                         
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Tasa de interés</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Tasa de interés
+                                <span class="tooltip">
+                                    <span class="help-icon">?</span>
+                                    <span class="tooltiptext">
+                                        <strong>Tasa de Interés:</strong> Es la tasa de rendimiento anual del bono. Puede ser nominal o efectiva según lo seleccionado anteriormente. Se expresa como porcentaje anual.
+                                    </span>
+                                </span>
+                                <span class="example-tooltip">
+                                    <span class="info-icon">i</span>
+                                    <span class="example-tooltiptext">
+                                        <strong>Ejemplo:</strong> Para 6.5% anual, ingrese: <em>6.5</em>
+                                    </span>
+                                </span>
+                            </label>
                             <input type="number" name="tasa_interes" step="0.01" required
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                                    placeholder="Ingrese tasa de interés">
                         </div>
                         
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Tasa anual de descuento</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Tasa anual de descuento
+                                <span class="tooltip">
+                                    <span class="help-icon">?</span>
+                                    <span class="tooltiptext">
+                                        <strong>Tasa Anual de Descuento:</strong> Es la tasa utilizada para calcular el valor presente de los flujos futuros del bono. Representa el rendimiento requerido por el inversionista.
+                                    </span>
+                                </span>
+                                <span class="example-tooltip">
+                                    <span class="info-icon">i</span>
+                                    <span class="example-tooltiptext">
+                                        <strong>Ejemplo:</strong> Para 8% anual, ingrese: <em>8</em>
+                                    </span>
+                                </span>
+                            </label>
                             <input type="number" name="tasa_anual_descuento" step="0.01" required
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                                    placeholder="Ingrese tasa de descuento">
@@ -213,20 +479,62 @@
                     <!-- Cuarta fila -->
                     <div class="flex gap-6">
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Impuesto a la Renta</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Impuesto a la Renta
+                                <span class="tooltip">
+                                    <span class="help-icon">?</span>
+                                    <span class="tooltiptext">
+                                        <strong>Impuesto a la Renta:</strong> Es el porcentaje de impuesto que se aplica a los rendimientos del bono. En Perú, típicamente es 5% para personas naturales y 30% para personas jurídicas.
+                                    </span>
+                                </span>
+                                <span class="example-tooltip">
+                                    <span class="info-icon">i</span>
+                                    <span class="example-tooltiptext">
+                                        <strong>Ejemplo:</strong> Para personas naturales, ingrese: <em>5</em>
+                                    </span>
+                                </span>
+                            </label>
                             <input type="number" name="impuesto_renta" step="0.01" required
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                                    placeholder="Ingrese impuesto">
                         </div>
 
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de Emisión</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Fecha de Emisión
+                                <span class="tooltip">
+                                    <span class="help-icon">?</span>
+                                    <span class="tooltiptext">
+                                        <strong>Fecha de Emisión:</strong> Es la fecha en que se emitió el bono. Marca el inicio del período de vigencia del instrumento financiero.
+                                    </span>
+                                </span>
+                                <span class="example-tooltip">
+                                    <span class="info-icon">i</span>
+                                    <span class="example-tooltiptext">
+                                        <strong>Ejemplo:</strong> Si se emitió el 1 de enero, seleccione: <em>01/01/2024</em>
+                                    </span>
+                                </span>
+                            </label>
                             <input type="date" name="fecha_emision" required
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
                         
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">% Prima</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                % Prima
+                                <span class="tooltip">
+                                    <span class="help-icon">?</span>
+                                    <span class="tooltiptext">
+                                        <strong>Prima:</strong> Es el porcentaje adicional sobre el valor nominal que se puede pagar o recibir. Campo opcional que se usa cuando el bono se negocia con prima.
+                                    </span>
+                                </span>
+                                <span class="example-tooltip">
+                                    <span class="info-icon">i</span>
+                                    <span class="example-tooltiptext">
+                                        <strong>Ejemplo:</strong> Para 5% de prima, ingrese: <em>5</em>
+                                    </span>
+                                </span>
+                            </label>
                             <input type="number" name="porcentaje_prima" step="0.01"
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                                    placeholder="Ingrese % prima">
@@ -236,7 +544,21 @@
                     <!-- Quinta fila - Plazo de gracia -->
                     <div class="flex gap-6">
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">¿Tiene plazo de gracia?</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                ¿Tiene plazo de gracia?
+                                <span class="tooltip">
+                                    <span class="help-icon">?</span>
+                                    <span class="tooltiptext">
+                                        <strong>Plazo de Gracia:</strong> Es un período inicial donde no se pagan cupones o se pagan de manera diferida. Si selecciona "Sí", aparecerán campos adicionales para configurar este período.
+                                    </span>
+                                </span>
+                                <span class="example-tooltip">
+                                    <span class="info-icon">i</span>
+                                    <span class="example-tooltiptext">
+                                        <strong>Ejemplo:</strong> Para bonos con 2 años de gracia, seleccione: <em>Sí</em>
+                                    </span>
+                                </span>
+                            </label>
                             <select name="tiene_plazo_gracia" required
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 <option value="no">No</option>
@@ -245,14 +567,45 @@
                         </div>
                         
                         <div class="flex-1 hidden" name="plazo_gracia_fields">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Nº Periodos de Gracia</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Nº Periodos de Gracia
+                                <span class="tooltip">
+                                    <span class="help-icon">?</span>
+                                    <span class="tooltiptext">
+                                        <strong>Períodos de Gracia:</strong> Cantidad de períodos donde no se pagan cupones normalmente. Debe ser un número entero.
+                                    </span>
+                                </span>
+                                <span class="example-tooltip">
+                                    <span class="info-icon">i</span>
+                                    <span class="example-tooltiptext">
+                                        <strong>Ejemplo:</strong> Para 4 períodos de gracia, ingrese: <em>4</em>
+                                    </span>
+                                </span>
+                            </label>
                             <input type="number" name="periodos_gracia"
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                                    placeholder="Ingrese periodos">
                         </div>
                         
                         <div class="flex-1 hidden" name="plazo_gracia_fields">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Gracia</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Tipo de Gracia
+                                <span class="tooltip">
+                                    <span class="help-icon">?</span>
+                                    <span class="tooltiptext">
+                                        <strong>Tipo de Gracia:</strong><br>
+                                        • <strong>Parcial:</strong> Se pagan solo parte de los intereses<br>
+                                        • <strong>Total:</strong> No se pagan intereses<br>
+                                        • <strong>Normal:</strong> Se pagan intereses normalmente
+                                    </span>
+                                </span>
+                                <span class="example-tooltip">
+                                    <span class="info-icon">i</span>
+                                    <span class="example-tooltiptext">
+                                        <strong>Ejemplo:</strong> Para no pagar intereses, seleccione: <em>Total</em>
+                                    </span>
+                                </span>
+                            </label>
                             <select name="tipo_gracia"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 <option value="parcial">Parcial</option>
@@ -265,7 +618,21 @@
                     <!-- Sexta fila - Estructuración -->
                     <div class="flex gap-6">
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">% Estructuración</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                % Estructuración
+                                <span class="tooltip">
+                                    <span class="help-icon">?</span>
+                                    <span class="tooltiptext">
+                                        <strong>Estructuración:</strong> Es el porcentaje de comisión que cobra la entidad estructuradora del bono. Se puede cobrar al emisor o al inversionista.
+                                    </span>
+                                </span>
+                                <span class="example-tooltip">
+                                    <span class="info-icon">i</span>
+                                    <span class="example-tooltiptext">
+                                        <strong>Ejemplo:</strong> Para 1.5% al emisor, ingrese: <em>1.5</em>
+                                    </span>
+                                </span>
+                            </label>
                             <div class="flex gap-2">
                                 <input type="number" name="porcentaje_estructuracion" step="0.01"
                                        class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
@@ -281,7 +648,21 @@
 
                         <!-- Colocación -->
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">% Colocación</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                % Colocación
+                                <span class="tooltip">
+                                    <span class="help-icon">?</span>
+                                    <span class="tooltiptext">
+                                        <strong>Colocación:</strong> Es el porcentaje de comisión que cobra la entidad colocadora por vender el bono en el mercado. Se puede cobrar al emisor o al inversionista.
+                                    </span>
+                                </span>
+                                <span class="example-tooltip">
+                                    <span class="info-icon">i</span>
+                                    <span class="example-tooltiptext">
+                                        <strong>Ejemplo:</strong> Para 2% al bonista, ingrese: <em>2</em>
+                                    </span>
+                                </span>
+                            </label>
                             <div class="flex gap-2">
                                 <input type="number" name="porcentaje_colocacion" step="0.01"
                                        class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
@@ -297,7 +678,21 @@
                         
                         <!-- Flotación -->
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">% Flotación</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                % Flotación
+                                <span class="tooltip">
+                                    <span class="help-icon">?</span>
+                                    <span class="tooltiptext">
+                                        <strong>Flotación:</strong> Es el porcentaje de comisión que se cobra por poner el bono en flotación (disponible para negociación) en el mercado secundario.
+                                    </span>
+                                </span>
+                                <span class="example-tooltip">
+                                    <span class="info-icon">i</span>
+                                    <span class="example-tooltiptext">
+                                        <strong>Ejemplo:</strong> Para 0.5% al bonista, ingrese: <em>0.5</em>
+                                    </span>
+                                </span>
+                            </label>
                             <div class="flex gap-2">
                                 <input type="number" name="porcentaje_flotacion" step="0.01"
                                        class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
@@ -315,7 +710,21 @@
                     <!-- Séptima fila - CAVALI -->
                     <div class="flex gap-6">
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">% CAVALI</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                % CAVALI
+                                <span class="tooltip">
+                                    <span class="help-icon">?</span>
+                                    <span class="tooltiptext">
+                                        <strong>CAVALI:</strong> Es el porcentaje de comisión que cobra CAVALI (Caja de Valores y Liquidaciones) por el registro y custodia del bono en el sistema de liquidación y compensación.
+                                    </span>
+                                </span>
+                                <span class="example-tooltip">
+                                    <span class="info-icon">i</span>
+                                    <span class="example-tooltiptext">
+                                        <strong>Ejemplo:</strong> Para 0.3% al bonista, ingrese: <em>0.3</em>
+                                    </span>
+                                </span>
+                            </label>
                             <div class="flex gap-2">
                                 <input type="number" name="porcentaje_cavali" step="0.01"
                                        class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
