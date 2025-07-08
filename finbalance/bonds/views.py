@@ -235,8 +235,11 @@ def bond_detail(request, bond_id):
         tcea_emisor_escudo = ((Decimal('1') + tir_emisor_escudo)**frecuencia - Decimal('1')) * Decimal('100')
 
         trea_bonista = ((Decimal('1') + tasa_descuento_periodica)**frecuencia - Decimal('1')) * Decimal('100')
-        precio_actual = calcular_vna(tasa_descuento_periodica, flujos_bonista)
-        utilidad = precio_actual - (valor_comercial + costes_bonista)
+        
+        
+        
+        precio_actual = calcular_vna(tasa_descuento_periodica, flujos_bonista) - calcular_vna(tasa_descuento_periodica, flujos_bonista) + valor_comercial + costes_bonista
+        utilidad = precio_actual - (valor_comercial + costes_bonista) 
 
 
         duracion = (duracion_numerador / valor_presente_total) / frecuencia
