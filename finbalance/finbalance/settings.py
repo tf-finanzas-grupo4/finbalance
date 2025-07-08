@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-m!#ls%uglwa@95o@fq*_lki3&zu7*w%b=f@=)*+m=v^-v)gi9n
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['161.35.119.208', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ["finbalance.devcorp.pe", "localhost", "127.0.0.1"]
 
 
 # Application definition
