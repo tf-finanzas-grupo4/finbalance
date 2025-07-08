@@ -91,3 +91,8 @@ htmlcov/
 *.tmp
 *.temp
 .cache/
+
+venv/
+finbalance_env/
+*.pyc
+__pycache__/
