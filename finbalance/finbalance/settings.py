@@ -141,4 +141,4 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'bonds:list'
 LOGOUT_REDIRECT_URL = 'login'
 
-NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
+NPM_BIN_PATH = "/usr/bin/npm"
