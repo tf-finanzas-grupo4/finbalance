@@ -192,7 +192,7 @@
         </div>
     </div>
 
-    <!-- Sección del gráfico -->
+<!-- Sección del gráfico mejorada -->
 <div class="bg-white p-6 rounded-lg shadow-lg mt-8 border border-gray-100">
     <h2 class="text-2xl font-bold text-gray-800 mb-4">Flujos de Caja del Bono</h2>
     
@@ -200,61 +200,18 @@
         <canvas id="cashFlowChart"></canvas>
     </div>
     
-    <!-- Leyenda personalizada -->
-    <div class="flex justify-center gap-5 mb-5 flex-wrap">
-        <div class="flex items-center gap-2">
-            <div class="w-4 h-4 bg-blue-500 rounded-sm"></div>
-            <span class="text-sm text-gray-600 font-medium">Intereses</span>
-        </div>
-        <div class="flex items-center gap-2">
-            <div class="w-4 h-4 bg-green-500 rounded-sm"></div>
-            <span class="text-sm text-gray-600 font-medium">Amortización</span>
-        </div>
-        <div class="flex items-center gap-2">
-            <div class="w-4 h-4 bg-yellow-500 rounded-sm"></div>
-            <span class="text-sm text-gray-600 font-medium">Prima</span>
-        </div>
-        <div class="flex items-center gap-2">
-            <div class="w-4 h-4 bg-red-500 rounded-sm"></div>
-            <span class="text-sm text-gray-600 font-medium">Flujo Total</span>
-        </div>
-    </div>
-    
-    <!-- Estadísticas resumen -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-gray-50 p-4 rounded-lg border">
-            <div class="text-xs text-gray-500 font-medium mb-1">Total Intereses</div>
-            <div class="text-lg font-semibold text-gray-800">
-                {% widthratio flujos|length 1 1 as total_intereses %}
-                 {{ total_intereses|floatformat:0 }}
-            </div>
-        </div>
-        <div class="bg-gray-50 p-4 rounded-lg border">
-            <div class="text-xs text-gray-500 font-medium mb-1">Total Amortización</div>
-            <div class="text-lg font-semibold text-gray-800">S/ {{ bond.valor_nominal|floatformat:0 }}</div>
-        </div>
-        <div class="bg-gray-50 p-4 rounded-lg border">
-            <div class="text-xs text-gray-500 font-medium mb-1">Prima Total</div>
-            <div class="text-lg font-semibold text-gray-800">
-                S/ {% widthratio bond.porcentaje_prima bond.valor_nominal 100 %}
-            </div>
-        </div>
-        <div class="bg-gray-50 p-4 rounded-lg border">
-            <div class="text-xs text-gray-500 font-medium mb-1">Flujo Total</div>
-            <div class="text-lg font-semibold text-gray-800">S/ {{ precio_actual|add:utilidad|floatformat:0 }}</div>
-        </div>
-    </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <script>
-    // Preparar datos desde Django
+    // Datos preparados desde Django (asegúrate de calcular estos valores en tu vista)
     const periodos = [{% for flujo in flujos %}'{{ flujo.periodo }}'{% if not forloop.last %},{% endif %}{% endfor %}];
     const intereses = [{% for flujo in flujos %}{{ flujo.interes }}{% if not forloop.last %},{% endif %}{% endfor %}];
     const amortizacion = [{% for flujo in flujos %}{{ flujo.amortizacion }}{% if not forloop.last %},{% endif %}{% endfor %}];
     const prima = [{% for flujo in flujos %}{{ flujo.prima }}{% if not forloop.last %},{% endif %}{% endfor %}];
     const flujoTotal = intereses.map((int, i) => int + amortizacion[i] + prima[i]);
 
+    // Configuración mejorada del gráfico
     const ctx = document.getElementById('cashFlowChart').getContext('2d');
     const cashFlowChart = new Chart(ctx, {
         type: 'bar',
@@ -264,40 +221,48 @@
                 {
                     label: 'Intereses',
                     data: intereses,
-                    backgroundColor: '#3b82f6',
-                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                    borderColor: 'rgba(37, 99, 235, 1)',
                     borderWidth: 1,
-                    stack: 'stack1'
+                    stack: 'stack1',
+                    barPercentage: 0.8,
+                    categoryPercentage: 0.9
                 },
                 {
                     label: 'Amortización',
                     data: amortizacion,
-                    backgroundColor: '#10b981',
-                    borderColor: '#059669',
+                    backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                    borderColor: 'rgba(5, 150, 105, 1)',
                     borderWidth: 1,
-                    stack: 'stack1'
+                    stack: 'stack1',
+                    barPercentage: 0.8,
+                    categoryPercentage: 0.9
                 },
                 {
                     label: 'Prima',
                     data: prima,
-                    backgroundColor: '#f59e0b',
-                    borderColor: '#d97706',
+                    backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                    borderColor: 'rgba(217, 119, 6, 1)',
                     borderWidth: 1,
-                    stack: 'stack1'
+                    stack: 'stack1',
+                    barPercentage: 0.8,
+                    categoryPercentage: 0.9
                 },
                 {
                     label: 'Flujo Total',
                     data: flujoTotal,
                     type: 'line',
                     backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    borderColor: '#ef4444',
+                    borderColor: 'rgba(239, 68, 68, 1)',
                     borderWidth: 3,
                     fill: false,
-                    tension: 0.1,
-                    pointBackgroundColor: '#ef4444',
-                    pointBorderColor: '#dc2626',
-                    pointRadius: 6,
-                    pointHoverRadius: 8,
+                    tension: 0.3,
+                    pointBackgroundColor: 'rgba(239, 68, 68, 1)',
+                    pointBorderColor: '#fff',
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointHitRadius: 10,
+                    pointBorderWidth: 2,
                     yAxisID: 'y1'
                 }
             ]
@@ -312,43 +277,72 @@
                 tooltip: {
                     mode: 'index',
                     intersect: false,
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 12 },
+                    padding: 12,
+                    cornerRadius: 6,
                     callbacks: {
                         label: function(context) {
+                            const label = context.dataset.label || '';
                             const value = context.parsed.y;
-                            return `${context.dataset.label}: S/ ${value.toLocaleString()}`;
+                            return `${label}: S/ ${value.toLocaleString('es-PE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                        },
+                        footer: function(tooltipItems) {
+                            if (tooltipItems[0].datasetIndex === 3) {
+                                const total = tooltipItems[0].parsed.y;
+                                return [`Total: S/ ${total.toLocaleString('es-PE', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`];
+                            }
+                            return '';
                         }
                     }
                 }
             },
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
             scales: {
                 x: {
+                    stacked: true,
                     title: {
                         display: true,
                         text: 'Periodos',
                         color: '#374151',
                         font: { size: 14, weight: 'bold' }
                     },
-                    grid: { display: false },
-                    ticks: { color: '#6b7280' }
+                    grid: { 
+                        display: false,
+                        drawBorder: true
+                    },
+                    ticks: { 
+                        color: '#6b7280',
+                        font: { size: 12 }
+                    }
                 },
                 y: {
+                    stacked: true,
                     type: 'linear',
                     display: true,
                     position: 'left',
                     title: {
                         display: true,
-                        text: 'Monto (S/)',
+                        text: 'Componentes (S/)',
                         color: '#374151',
                         font: { size: 14, weight: 'bold' }
                     },
-                    grid: { color: '#f3f4f6' },
+                    grid: { 
+                        color: 'rgba(243, 244, 246, 1)',
+                        drawBorder: true
+                    },
                     ticks: {
                         color: '#6b7280',
                         callback: function(value) {
-                            return 'S/ ' + value.toLocaleString();
-                        }
-                    }
+                            return 'S/ ' + value.toLocaleString('es-PE');
+                        },
+                        font: { size: 12 }
+                    },
+                    beginAtZero: true
                 },
                 y1: {
                     type: 'linear',
@@ -357,17 +351,26 @@
                     title: {
                         display: true,
                         text: 'Flujo Total (S/)',
-                        color: '#ef4444',
+                        color: 'rgba(239, 68, 68, 1)',
                         font: { size: 14, weight: 'bold' }
                     },
-                    grid: { drawOnChartArea: false },
+                    grid: { 
+                        drawOnChartArea: false,
+                        drawBorder: true
+                    },
                     ticks: {
-                        color: '#ef4444',
+                        color: 'rgba(239, 68, 68, 1)',
                         callback: function(value) {
-                            return 'S/ ' + value.toLocaleString();
-                        }
-                    }
+                            return 'S/ ' + value.toLocaleString('es-PE');
+                        },
+                        font: { size: 12 }
+                    },
+                    beginAtZero: true
                 }
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeOutQuart'
             }
         }
     });

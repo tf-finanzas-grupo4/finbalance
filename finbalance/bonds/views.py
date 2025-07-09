@@ -2,13 +2,16 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Bond
 from django.utils import timezone
-from decimal import Decimal, getcontext
+from decimal import Decimal, ROUND_HALF_DOWN
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import math
+from datetime import datetime, timedelta
 
 import base64
 from io import BytesIO
+
 
 def generar_grafico_recuperacion(flujos):
     # Preparar datos
@@ -46,7 +49,6 @@ def calcular_vna(tasa_descuento, flujos):
         vna += flujo / (1 + tasa_descuento)**periodo
     return vna
 
-# bonds/views.py
 @login_required
 def bond_list(request):
     bonds = Bond.objects.all().order_by('-fecha_registro')
@@ -101,191 +103,392 @@ def bond_create(request):
 
 
 @login_required
-def bond_detail(request, bond_id):
-    getcontext().prec = 12
-    bond = get_object_or_404(Bond, id=bond_id)
-    
-    try:
-        # === PARTE 1: Variables base ===
-        tasa = Decimal(str(bond.tasa_interes)) / Decimal('100')
-        tasa_descuento = Decimal(str(bond.tasa_anual_descuento)) / Decimal('100')
-        frecuencia = bond.frecuencia_cupon
-        valor_nominal = Decimal(str(bond.valor_nominal))
-        valor_comercial = Decimal(str(bond.valor_comercial))
-        num_anios = bond.num_anios
-        impuesto_renta = Decimal(str(bond.impuesto_renta)) / Decimal('100')
-        num_pagos = frecuencia * num_anios
-        periodos_gracia = bond.periodos_gracia if bond.tiene_plazo_gracia else 0
+def bond_delete(request, pk):
+    bond = get_object_or_404(Bond, pk=pk)
+    if request.method == 'POST':
+        bond.delete()
+        return redirect('bonds:list')  # Redirige a la lista de bonos
+    return render(request, 'bonds/bond_confirm_delete.html', {'bond': bond})
 
-        # === PARTE 2: Tasas periódicas ===
-        if bond.tipo_tasa_interes == 'nominal':
-            tasa_periodica = tasa / frecuencia
-            tasa_descuento_periodica = tasa_descuento / frecuencia
+def calculate_bond_metrics(bond):
+    """
+    Calcula todas las métricas financieras para un bono usando el método francés
+    """
+    # Cálculos básicos
+    periodos_por_anio = bond.frecuencia_cupon
+    total_periodos = bond.num_anios * periodos_por_anio
+    dias_capitalizacion = bond.dias_por_anio // periodos_por_anio
+    
+    # Convertir a float para cálculos matemáticos
+    tasa_interes = float(bond.tasa_interes)
+    tasa_descuento = float(bond.tasa_anual_descuento)
+    valor_comercial = float(bond.valor_comercial)  # ← AGREGAR ESTA LÍNEA
+    
+    # Cálculo de tasas
+    if bond.tipo_tasa_interes == 'efectiva':
+        tea = tasa_interes / 100
+    else:  # nominal
+        capitalizacion = bond.capitalizacion or 1
+        tea = (1 + (tasa_interes / 100) / capitalizacion) ** capitalizacion - 1
+    
+    # Tasa efectiva por periodo
+    tep = (1 + tea) ** (1 / periodos_por_anio) - 1
+    
+    # COK (Costo de oportunidad del capital)
+    cok_anual = tasa_descuento / 100
+    cok_periodo = (1 + cok_anual) ** (1 / periodos_por_anio) - 1
+    
+    # Cálculo de costes
+    costes_data = calculate_costes(bond)
+    costes_bonista = costes_data['bonista']
+    
+    # Generar flujos de caja
+    flujos = generate_cash_flows(bond, tep, total_periodos)
+    
+    # Cálculo del precio actual (valor presente)
+    precio_actual = calculate_present_value(flujos, cok_periodo)
+    
+   # Cálculo de duración y convexidad (ahora devuelve 4 valores)
+    duracion, convexidad, duracion_modificada, total_ratios = calculate_duration_convexity(flujos, cok_periodo, periodos_por_anio)
+    
+    # Cálculo de TCEAs y TREA
+    tcea_emisor = calculate_tcea_emisor(bond, flujos, costes_data)
+    tcea_emisor_escudo = calculate_tcea_emisor_escudo(bond, flujos, costes_data)
+    trea_bonista = calculate_trea_bonista(bond, flujos, costes_data)
+    
+    # Utilidad/Pérdida (ahora ambos son float)
+    utilidad = -float(bond.valor_comercial) - costes_bonista + precio_actual
+    
+    
+    return {
+        'bond': bond,
+        'periodos_por_anio': periodos_por_anio,
+        'periodo_nombre': get_periodo_name(periodos_por_anio),
+        'dias_capitalizacion': dias_capitalizacion,
+        'tea': tea * 100,
+        'tep': tep * 100,
+        'cok_periodo': cok_periodo * 100,
+        'flujos': flujos,
+        'precio_actual': precio_actual,
+        'utilidad': utilidad,
+        'duracion': duracion,
+        'convexidad': convexidad,
+        'duracion_modificada': duracion_modificada,
+        'total_ratios': total_ratios,  # Usar el valor calculado
+        'tcea_emisor': tcea_emisor * 100,
+        'tcea_emisor_escudo': tcea_emisor_escudo * 100,
+        'trea_bonista': trea_bonista * 100,
+        'costes_emisor': costes_data['emisor'],
+        'costes_bonista': costes_data['bonista'],
+    }
+
+def calculate_costes(bond):
+    """
+    Calcula los costes iniciales del emisor y bonista
+    """
+    valor_comercial = float(bond.valor_comercial)
+    
+    costes_emisor = 0
+    costes_bonista = 0
+    
+    
+    # Estructuración
+    estr_pct = float(bond.porcentaje_estructuracion or 0)
+    estr_monto = (estr_pct / 100) * valor_comercial
+    if bond.tipo_estructuracion == 'emisor':
+        costes_emisor += estr_monto
+    elif bond.tipo_estructuracion == 'bonista':
+        costes_bonista += estr_monto
+    elif bond.tipo_estructuracion == 'ambos':
+        costes_emisor += estr_monto
+        costes_bonista += estr_monto
+    
+    # Colocación
+    coloc_pct = float(bond.porcentaje_colocacion or 0)
+    coloc_monto = (coloc_pct / 100) * valor_comercial
+    if bond.tipo_colocacion == 'emisor':
+        costes_emisor += coloc_monto
+    elif bond.tipo_colocacion == 'bonista':
+        costes_bonista += coloc_monto
+    elif bond.tipo_colocacion == 'ambos':
+        costes_emisor += coloc_monto 
+        costes_bonista += coloc_monto 
+    
+    # Flotación
+    flot_pct = float(bond.porcentaje_flotacion or 0)
+    flot_monto = (flot_pct / 100) * valor_comercial
+    if bond.tipo_flotacion == 'emisor':
+        costes_emisor += flot_monto
+    elif bond.tipo_flotacion == 'bonista':
+        costes_bonista += flot_monto
+    elif bond.tipo_flotacion == 'ambos':
+        costes_emisor += flot_monto 
+        costes_bonista += flot_monto 
+    
+    # Cavali
+    cavali_pct = float(bond.porcentaje_cavali or 0)
+    cavali_monto = (cavali_pct / 100) * valor_comercial
+    if bond.tipo_cavali == 'emisor':
+        costes_emisor += cavali_monto
+    elif bond.tipo_cavali == 'bonista':
+        costes_bonista += cavali_monto
+    elif bond.tipo_cavali == 'ambos':
+        costes_emisor += cavali_monto 
+        costes_bonista += cavali_monto 
+    
+    return {
+        'emisor': costes_emisor,
+        'bonista': costes_bonista
+    }
+
+def generate_cash_flows(bond, tep, total_periodos):
+    """
+    Genera los flujos de caja usando el método francés
+    """
+    flujos = []
+    valor_nominal = float(bond.valor_nominal)
+    prima_pct = float(bond.porcentaje_prima or 0)
+    prima_por_periodo = (prima_pct / 100) * valor_nominal / total_periodos
+    
+    # Verificar si hay periodo de gracia
+    periodos_gracia = 0
+    if bond.tiene_plazo_gracia:
+        periodos_gracia = bond.periodos_gracia or 0
+    
+    # Cálculo de la cuota constante (método francés)
+    if bond.tiene_plazo_gracia and bond.tipo_gracia == 'total':
+        # Periodo de gracia total: no se paga ni interés ni capital
+        periodos_pago = total_periodos - periodos_gracia
+        if periodos_pago > 0:
+            cuota_constante = (valor_nominal * tep) / (1 - (1 + tep) ** -periodos_pago)
         else:
-            tasa_periodica = (Decimal('1') + tasa)**(Decimal('1')/frecuencia) - Decimal('1')
-            tasa_descuento_periodica = (Decimal('1') + tasa_descuento)**(Decimal('1')/frecuencia) - Decimal('1')
-
-        tea = ((Decimal('1') + tasa_periodica)**frecuencia - Decimal('1')) * Decimal('100')
-        tep = tasa_periodica * Decimal('100')
-        cok_periodo = tasa_descuento_periodica * Decimal('100')
-
-        # === PARTE 3: Cuota fija del método francés ===
-        factor = (Decimal('1') - (Decimal('1') + tasa_periodica)**Decimal(-num_pagos)) / tasa_periodica
-        cuota = valor_nominal / factor
-
-        # === PARTE 4: Costos iniciales ===
-        def calcular_costos(tipo):
-            return sum([
-                getattr(bond, f'porcentaje_{nombre}') * (Decimal('1') if getattr(bond, f'tipo_{nombre}') in [tipo, 'ambos'] else Decimal('0'))
-                for nombre in ['estructuracion', 'colocacion', 'flotacion', 'cavali']
-            ]) / Decimal('100') * valor_comercial
-
-        costes_emisor = calcular_costos('emisor')
-        costes_bonista = calcular_costos('bonista')
-
-        # === PARTE 5: Flujos ===
-        saldo = valor_nominal
-        flujos = []
-        flujos_bonista = []
-        flujos_emisor = [valor_comercial - costes_emisor]
-        flujos_emisor_con_escudo = [valor_comercial - costes_emisor]
-        duracion_numerador = valor_presente_total = convexidad_numerador = Decimal('0')
-
-        for t in range(1, num_pagos + 1):
-            en_gracia = t <= periodos_gracia
-
-            if en_gracia:
-                if bond.tipo_gracia == 'total':
-                    interes = amortizacion = cuota_periodo = Decimal('0')
-                elif bond.tipo_gracia == 'parcial':
-                    interes = saldo * tasa_periodica
-                    amortizacion = Decimal('0')
-                    cuota_periodo = interes
-                else:
-                    interes = saldo * tasa_periodica
-                    amortizacion = Decimal('0')
-                    cuota_periodo = interes
-                    saldo += interes
-            else:
-                interes = saldo * tasa_periodica
-                cuota_periodo = cuota
-                amortizacion = cuota - interes
-
-            interes_neto = interes * (Decimal('1') - impuesto_renta)
-            escudo = interes * impuesto_renta
-            flujo_bonista = amortizacion + interes_neto
-            flujo_emisor = -cuota_periodo
-            flujo_emisor_con_escudo = flujo_emisor + escudo
-
-            # === Agregar prima al último periodo ===
-            prima = Decimal('0')
-            if t == num_pagos and bond.porcentaje_prima:
-                prima = valor_nominal * bond.porcentaje_prima / Decimal('100')
-                flujo_bonista += prima  # 👈 Aquí sí se suma correctamente
-                flujos_emisor[-1] -= prima  # 👈 El emisor paga más al final
-                flujos_emisor_con_escudo[-1] -= prima
-
-            flujos_bonista.append(flujo_bonista)
-            flujos_emisor.append(flujo_emisor)
-            flujos_emisor_con_escudo.append(flujo_emisor_con_escudo)
-
-            factor_actualizacion = Decimal('1') / (Decimal('1') + tasa_descuento_periodica)**t
-            vp_flujo = flujo_bonista * factor_actualizacion
-
-            if not en_gracia or bond.tipo_gracia != 'total':
-                saldo -= amortizacion
-
-            duracion_numerador += vp_flujo * t
-            valor_presente_total += vp_flujo
-            convexidad_numerador += vp_flujo * t * (t + 1)
-
-            flujos.append({
-                'periodo': t,
-                'cuota': cuota_periodo,
-                'interes': interes,
-                'amortizacion': amortizacion,
-                'saldo': saldo if saldo > 0 else Decimal('0'),
-                'vp_flujo': vp_flujo,
-                'flujo_bonista': flujo_bonista,
-                'flujo_emisor': flujo_emisor,
-                'prima': prima,
-                'escudo': escudo,
-                'flujo_emisor_con_escudo': flujo_emisor_con_escudo,
-                'factor_actualizacion': factor_actualizacion,
-                'fa_x_plazo': factor_actualizacion * t,
-                'en_gracia': en_gracia,
-                'tipo_gracia': bond.tipo_gracia if en_gracia else None,
-            })
-
-        # === PARTE 6: Indicadores finales ===
-        def calcular_tir(flujos):
-            tasa = Decimal('0.1')
-            for _ in range(100):
-                vna = sum(cf / (1 + tasa)**i for i, cf in enumerate(flujos))
-                derivada = sum(-i * cf / (1 + tasa)**(i + 1) for i, cf in enumerate(flujos))
-                if abs(vna) < Decimal('0.0001') or derivada == 0:
-                    break
-                tasa -= vna / derivada
-            return tasa
-
-        tir_emisor = calcular_tir(flujos_emisor)
-        tcea_emisor = ((Decimal('1') + tir_emisor)**frecuencia - Decimal('1')) * Decimal('100')
-
-        tir_emisor_escudo = calcular_tir(flujos_emisor_con_escudo)
-        tcea_emisor_escudo = ((Decimal('1') + tir_emisor_escudo)**frecuencia - Decimal('1')) * Decimal('100')
-
-        trea_bonista = ((Decimal('1') + tasa_descuento_periodica)**frecuencia - Decimal('1')) * Decimal('100')
+            cuota_constante = 0
+    elif bond.tiene_plazo_gracia and bond.tipo_gracia == 'parcial':
+        # Periodo de gracia parcial: solo se paga interés
+        periodos_pago = total_periodos - periodos_gracia
+        if periodos_pago > 0:
+            cuota_constante = (valor_nominal * tep) / (1 - (1 + tep) ** -periodos_pago)
+        else:
+            cuota_constante = 0
+    else:
+        # Sin periodo de gracia
+        cuota_constante = (valor_nominal * tep) / (1 - (1 + tep) ** -total_periodos)
+    
+    saldo_pendiente = valor_nominal
+    
+    for periodo in range(1, total_periodos + 1):
+        # Cálculo de interés
+        interes = saldo_pendiente * tep
         
+        # Determinar tipo de periodo
+        if periodo <= periodos_gracia:
+            if bond.tipo_gracia == 'total':
+                # Periodo de gracia total
+                cuota = 0
+                amortizacion = 0
+                # El interés se capitaliza
+                saldo_pendiente += interes
+                interes_mostrado = 0
+            else:  # parcial
+                # Periodo de gracia parcial
+                cuota = interes
+                amortizacion = 0
+                interes_mostrado = interes
+        else:
+            # Periodo normal
+            cuota = cuota_constante
+            amortizacion = cuota - interes
+            saldo_pendiente -= amortizacion
+            interes_mostrado = interes
         
+        # Ajustar último periodo para evitar saldo residual
+        if periodo == total_periodos and saldo_pendiente > 0.01:
+            amortizacion += saldo_pendiente
+            cuota = interes_mostrado + amortizacion
+            saldo_pendiente = 0
         
-        precio_actual = calcular_vna(tasa_descuento_periodica, flujos_bonista) - calcular_vna(tasa_descuento_periodica, flujos_bonista) + valor_comercial + costes_bonista
-        utilidad = precio_actual - (valor_comercial + costes_bonista) 
-
-
-        duracion = (duracion_numerador / valor_presente_total) / frecuencia
-        duracion_modificada = duracion / (Decimal('1') + tasa_descuento_periodica)
-        convexidad = (convexidad_numerador / (valor_presente_total * (Decimal('1') + tasa_descuento_periodica)**2)) / (frecuencia**2)
-        total_ratios = duracion + convexidad
-
-        periodo_nombre = {
-            12: 'Mensual', 6: 'Bimestral', 4: 'Trimestral',
-            3: 'Cuatrimestral', 2: 'Semestral', 1: 'Anual'
-        }.get(frecuencia, 'Periódica')
-
-        grafico_recuperacion = generar_grafico_recuperacion(flujos)
-
-        return render(request, 'bonds/detail.html', {
-            'bond': bond,
-            'flujos': flujos,
-            'flujos_bonista': flujos_bonista,
-            'periodos_por_anio': frecuencia,
-            'periodo_nombre': periodo_nombre,
-            'tea': tea,
-            'tep': tep,
-            'cok_periodo': cok_periodo,
-            'costes_emisor': costes_emisor,
-            'costes_bonista': costes_bonista,
-            'precio_actual': precio_actual,
-            'utilidad': utilidad,
-            'duracion': duracion,
-            'duracion_modificada': duracion_modificada,
-            'convexidad': convexidad,
-            'total_ratios': total_ratios,
-            'tcea_emisor': tcea_emisor,
-            'tcea_emisor_escudo': tcea_emisor_escudo,
-            'trea_bonista': trea_bonista,
-            'precio_teorico': valor_presente_total,
-            'tasa_periodica': tasa_periodica * Decimal('100'),
-            'periodos_gracia': periodos_gracia,
-            'grafico_recuperacion': grafico_recuperacion,
+        flujos.append({
+            'periodo': periodo,
+            'cuota': round(cuota, 2),
+            'interes': round(interes_mostrado, 2),
+            'amortizacion': round(amortizacion, 2),
+            'saldo': round(saldo_pendiente, 2),
+            'prima': round(prima_por_periodo, 2)
         })
     
+    return flujos
 
-    except Exception as e:
-        return render(request, 'bonds/error.html', {
-            'error': f"Error en cálculos: {str(e)}",
-            'bond': bond
-        })
+def calculate_present_value(flujos, cok_periodo):
+    """
+    Calcula el valor presente de los flujos de caja
+    """
+    valor_presente = 0
+    for flujo in flujos:
+        flujo_total = flujo['cuota'] + flujo['prima']
+        valor_presente += flujo_total / ((1 + cok_periodo) ** flujo['periodo'])
     
+    return valor_presente
+
+def calculate_duration_convexity(flujos, cok_periodo, periodos_por_anio):
+    """
+    Calcula la duración y convexidad del bono
+    """
+    # Inicializar variables
+    duracion_numerador = Decimal('0')
+    valor_presente_total = Decimal('0')
+    convexidad_numerador = Decimal('0')
     
+    for flujo in flujos:
+        flujo_total = Decimal(str(flujo['cuota'])) + Decimal(str(flujo['prima']))
+        factor_actualizacion = Decimal('1') / (Decimal('1') + Decimal(str(cok_periodo))) ** Decimal(str(flujo['periodo']))
+        vp_flujo = flujo_total * factor_actualizacion
+        
+        duracion_numerador += vp_flujo * Decimal(str(flujo['periodo']))
+        valor_presente_total += vp_flujo
+        convexidad_numerador += vp_flujo * Decimal(str(flujo['periodo'])) * (Decimal(str(flujo['periodo'])) + Decimal('1'))
     
+    # Cálculo de duración (en años)
+    duracion = (duracion_numerador / valor_presente_total) / Decimal(str(periodos_por_anio))
+    
+    # Duración modificada
+    duracion_modificada = duracion / (Decimal('1') + Decimal(str(cok_periodo)))
+    
+    # Convexidad (en años)
+    convexidad = (convexidad_numerador / (valor_presente_total * (Decimal('1') + Decimal(str(cok_periodo)))**2)) / (Decimal(str(periodos_por_anio))**2)
+    
+    # Total ratios
+    total_ratios = duracion + convexidad
+    
+    return float(duracion), float(convexidad), float(duracion_modificada), float(total_ratios)
+
+def calculate_tcea_emisor(bond, flujos, costes_data):
+    """
+    Calcula la TCEA del emisor
+    """
+    # Flujo inicial (ingreso neto para el emisor)
+    flujo_inicial = float(bond.valor_comercial) - costes_data['emisor']
+    
+    # Flujos futuros (egresos para el emisor)
+    flujos_futuros = []
+    for flujo in flujos:
+        flujo_total = flujo['cuota'] + flujo['prima']
+        flujos_futuros.append(-flujo_total)  # Negativo porque son egresos
+    
+    # Usar método de Newton-Raphson para encontrar la TIR
+    tir = newton_raphson_tir([flujo_inicial] + flujos_futuros)
+    
+    # Convertir a tasa anual
+    periodos_por_anio = len(flujos) / bond.num_anios
+    tcea = (1 + tir) ** periodos_por_anio - 1
+    
+    return tcea
+
+def calculate_tcea_emisor_escudo(bond, flujos, costes_data):
+    """
+    Calcula la TCEA del emisor considerando el escudo fiscal
+    """
+    # Flujo inicial
+    flujo_inicial = float(bond.valor_comercial) - costes_data['emisor']
+    
+    # Flujos futuros con escudo fiscal
+    flujos_futuros = []
+    impuesto_renta = float(bond.impuesto_renta or 0)
+    
+    for flujo in flujos:
+        interes_bruto = flujo['interes']
+        escudo_fiscal = interes_bruto * (impuesto_renta / 100)
+        interes_neto = interes_bruto - escudo_fiscal
+        flujo_total = interes_neto + flujo['amortizacion'] + flujo['prima']
+        flujos_futuros.append(-flujo_total)
+    
+    # Calcular TIR
+    tir = newton_raphson_tir([flujo_inicial] + flujos_futuros)
+    
+    # Convertir a tasa anual
+    periodos_por_anio = len(flujos) / bond.num_anios
+    tcea = (1 + tir) ** periodos_por_anio - 1
+    
+    return tcea
+
+def calculate_trea_bonista(bond, flujos, costes_data):
+    """
+    Calcula la TREA del bonista
+    """
+    # Flujo inicial (egreso para el bonista)
+    flujo_inicial = -(float(bond.valor_comercial) + costes_data['bonista'])
+    
+    # Flujos futuros (ingresos para el bonista)
+    flujos_futuros = []
+    for flujo in flujos:
+        flujo_total = flujo['cuota'] + flujo['prima']
+        flujos_futuros.append(flujo_total)
+    
+    # Calcular TIR
+    tir = newton_raphson_tir([flujo_inicial] + flujos_futuros)
+    
+    # Convertir a tasa anual
+    periodos_por_anio = len(flujos) / bond.num_anios
+    trea = (1 + tir) ** periodos_por_anio - 1
+    
+    return trea
+
+def newton_raphson_tir(flujos):
+    """
+    Calcula la TIR usando el método de Newton-Raphson
+    """
+    # Estimación inicial
+    r = 0.1
+    tolerance = 1e-10
+    max_iterations = 100
+    
+    for _ in range(max_iterations):
+        # Calcular VPN y su derivada
+        vpn = 0
+        vpn_derivada = 0
+        
+        for t, flujo in enumerate(flujos):
+            vpn += flujo / ((1 + r) ** t)
+            if t > 0:
+                vpn_derivada -= t * flujo / ((1 + r) ** (t + 1))
+        
+        # Verificar convergencia
+        if abs(vpn) < tolerance:
+            break
+        
+        # Actualizar estimación
+        if vpn_derivada != 0:
+            r_new = r - vpn / vpn_derivada
+        else:
+            break
+        
+        # Verificar convergencia en la tasa
+        if abs(r_new - r) < tolerance:
+            break
+        
+        r = r_new
+    
+    return r
+
+def get_periodo_name(periodos_por_anio):
+    """
+    Obtiene el nombre del periodo según la frecuencia
+    """
+    periodo_names = {
+        1: 'anual',
+        2: 'semestral',
+        3: 'cuatrimestral',
+        4: 'trimestral',
+        6: 'bimestral',
+        12: 'mensual',
+        360: 'diario'
+    }
+    return periodo_names.get(periodos_por_anio, 'período')
+
+@login_required
+def bond_detail(request, bond_id):
+    """
+    Vista para mostrar el detalle del bono con todos los cálculos
+    """
+    bond = get_object_or_404(Bond, id=bond_id)
+    context = calculate_bond_metrics(bond)
+    return render(request, 'bonds/detail.html', context)
