@@ -8,4 +8,5 @@ urlpatterns = [
     path('', views.bond_list, name='list'),
     path('crear/', views.bond_create, name='create'),
     path('<int:bond_id>/', views.bond_detail, name='detail'),
+    path('<int:pk>/delete/', views.bond_delete, name='delete'),
 ]

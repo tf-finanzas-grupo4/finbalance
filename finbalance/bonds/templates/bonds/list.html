@@ -1,18 +1,20 @@
 {% load static tailwind_tags %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>Mis Bonos - FinBalance</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     {% tailwind_css %}
 </head>
 
 <body class="bg-gray-50 font-sans leading-normal tracking-normal">
     <!-- Sidebar -->
     {% include 'components/sidebar.html' %}
-    
+
     <!-- Main content with left margin to account for fixed sidebar -->
     <main class="ml-64">
         <div class="space-y-6 p-8">
@@ -20,19 +22,24 @@
             <div>
                 <h2 class="text-3xl font-bold text-gray-800">Mis Bonos</h2>
             </div>
-            
-           <!-- Table -->
+
+            <!-- Table -->
             <div class="bg-white rounded-lg shadow overflow-hidden">
                 <table class="min-w-full">
                     <thead style="background-color: #DAE9FF;">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: #1E3C99;">N°</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: #1E3C99;">Registro</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: #1E3C99;">Valor Nominal</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: #1E3C99;">Valor Comercial</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: #1E3C99;">Tasa(%)</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: #1E3C99;">Plazo(años)</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: #1E3C99;">Acciones</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                                style="color: #1E3C99;">N°</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                                style="color: #1E3C99;">Registro</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                                style="color: #1E3C99;">Valor Nominal</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                                style="color: #1E3C99;">Valor Comercial</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                                style="color: #1E3C99;">Tasa(%)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                                style="color: #1E3C99;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -41,16 +48,24 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ forloop.counter }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ bond.fecha_registro|date:"d/m/Y" }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ bond.valor_nominal }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ bond.valor_comercial }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ bond.valor_comercial }}
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ bond.tasa_interes }}%</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ bond.num_anios }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                <a href="{% url 'bonds:detail' bond.id %}" class="text-blue-600 hover:underline">Ver detalle</a>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex space-x-4">
+                                <a href="{% url 'bonds:detail' bond.id %}" class="text-blue-600 hover:underline">Ver
+                                    detalle</a>
+                                <form action="{% url 'bonds:delete' bond.id %}" method="post"
+                                    onsubmit="return confirm('¿Eliminar este bono?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-red-600 hover:text-red-800">
+                                        <i class="fas fa-trash-alt"></i> <!-- Ícono de basura -->
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
+                            <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
                                 No hay bonos registrados
                             </td>
                         </tr>
@@ -61,4 +76,5 @@
         </div>
     </main>
 </body>
+
 </html>
