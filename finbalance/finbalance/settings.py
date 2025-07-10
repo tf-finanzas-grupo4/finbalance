@@ -126,11 +126,15 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = '/css/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
+    BASE_DIR / 'theme' / 'static',
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -142,4 +146,4 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'bonds:list'
 LOGOUT_REDIRECT_URL = 'login'
 
-NPM_BIN_PATH = "/usr/bin/npm"
+NPM_BIN_PATH = "/Users/tato/.asdf/shims/npm"
