@@ -114,5 +114,5 @@ class Bond(models.Model):
             2: 180,     # Semestral
             1: 360      # Anual
         }
-        return dias.get(self.capitalizacion, 30)
+        return dias.get(self.capitalizacion,"No aplica")
     
