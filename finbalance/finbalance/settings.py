@@ -38,11 +38,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'tailwind',
-    'theme',  
-    'django_browser_reload',
+    'theme',
     'authentication.apps.AuthenticationConfig',
     'bonds.apps.BondsConfig',
 ]
+
+# Only add django_browser_reload in development
+if DEBUG:
+    INSTALLED_APPS += ['django_browser_reload']
 
 # Add this setting below INSTALLED_APPS
 TAILWIND_APP_NAME = 'theme'
@@ -55,8 +58,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    "django_browser_reload.middleware.BrowserReloadMiddleware"
 ]
+
+# Only add BrowserReloadMiddleware in development
+if DEBUG:
+    MIDDLEWARE.append("django_browser_reload.middleware.BrowserReloadMiddleware")
 
 ROOT_URLCONF = 'finbalance.urls'
 
