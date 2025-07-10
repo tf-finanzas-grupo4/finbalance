@@ -20,7 +20,7 @@ from . import views
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
-    path("__reload__/", include("django_browser_reload.urls")),
+    # path("__reload__/", include("django_browser_reload.urls")),
     path('admin/', admin.site.urls),
     path('home/', views.home, name='home'),
     path('bonds/', include('bonds.urls')),
