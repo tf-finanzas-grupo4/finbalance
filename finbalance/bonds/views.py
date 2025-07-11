@@ -248,7 +248,8 @@ def generate_cash_flows(bond, tep, total_periodos):
     flujos = []
     valor_nominal = float(bond.valor_nominal)
     prima_pct = float(bond.porcentaje_prima or 0)
-    prima_por_periodo = (prima_pct / 100) * valor_nominal / total_periodos
+    # La prima se calcula como porcentaje del valor nominal y se paga en el último período
+    prima_total = (prima_pct / 100) * valor_nominal
     
     # Verificar si hay periodo de gracia
     periodos_gracia = 0
@@ -307,13 +308,23 @@ def generate_cash_flows(bond, tep, total_periodos):
             cuota = interes_mostrado + amortizacion
             saldo_pendiente = 0
         
+        # Asignar prima
+        prima_periodo = prima_total if periodo == total_periodos else 0
+        
+        # Prima mostrada
+        if periodo == total_periodos:
+            prima_mostrada = (prima_pct / 100) * amortizacion
+        else:
+            prima_mostrada = 0
+        
         flujos.append({
             'periodo': periodo,
             'cuota': round(cuota, 2),
             'interes': round(interes_mostrado, 2),
             'amortizacion': round(amortizacion, 2),
             'saldo': round(saldo_pendiente, 2),
-            'prima': round(prima_por_periodo, 2)
+            'prima': round(prima_mostrada, 2),
+            'prima_calculo': round(prima_periodo, 2)
         })
     
     return flujos
@@ -324,7 +335,8 @@ def calculate_present_value(flujos, cok_periodo):
     """
     valor_presente = 0
     for flujo in flujos:
-        flujo_total = flujo['cuota'] + flujo['prima']
+        prima_real = flujo.get('prima_calculo', flujo['prima'])
+        flujo_total = flujo['cuota'] + prima_real
         valor_presente += flujo_total / ((1 + cok_periodo) ** flujo['periodo'])
     
     return valor_presente
@@ -339,7 +351,8 @@ def calculate_duration_convexity(flujos, cok_periodo, periodos_por_anio):
     convexidad_numerador = Decimal('0')
     
     for flujo in flujos:
-        flujo_total = Decimal(str(flujo['cuota'])) + Decimal(str(flujo['prima']))
+        prima_real = flujo.get('prima_calculo', flujo['prima'])
+        flujo_total = Decimal(str(flujo['cuota'])) + Decimal(str(prima_real))
         factor_actualizacion = Decimal('1') / (Decimal('1') + Decimal(str(cok_periodo))) ** Decimal(str(flujo['periodo']))
         vp_flujo = flujo_total * factor_actualizacion
         
@@ -371,7 +384,8 @@ def calculate_tcea_emisor(bond, flujos, costes_data):
     # Flujos futuros (egresos para el emisor)
     flujos_futuros = []
     for flujo in flujos:
-        flujo_total = flujo['cuota'] + flujo['prima']
+        prima_real = flujo.get('prima_calculo', flujo['prima'])
+        flujo_total = flujo['cuota'] + prima_real
         flujos_futuros.append(-flujo_total)  # Negativo porque son egresos
     
     # Usar método de Newton-Raphson para encontrar la TIR
@@ -398,7 +412,8 @@ def calculate_tcea_emisor_escudo(bond, flujos, costes_data):
         interes_bruto = flujo['interes']
         escudo_fiscal = interes_bruto * (impuesto_renta / 100)
         interes_neto = interes_bruto - escudo_fiscal
-        flujo_total = interes_neto + flujo['amortizacion'] + flujo['prima']
+        prima_real = flujo.get('prima_calculo', flujo['prima'])
+        flujo_total = interes_neto + flujo['amortizacion'] + prima_real
         flujos_futuros.append(-flujo_total)
     
     # Calcular TIR
@@ -420,7 +435,8 @@ def calculate_trea_bonista(bond, flujos, costes_data):
     # Flujos futuros (ingresos para el bonista)
     flujos_futuros = []
     for flujo in flujos:
-        flujo_total = flujo['cuota'] + flujo['prima']
+        prima_real = flujo.get('prima_calculo', flujo['prima'])
+        flujo_total = flujo['cuota'] + prima_real
         flujos_futuros.append(flujo_total)
     
     # Calcular TIR
